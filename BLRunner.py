@@ -24,7 +24,7 @@ import os
 import pandas as pd
 
 import BLRun as br
-yaml.warnings({'YAMLLoadWarning': False})
+
 
 
 def get_parser() -> argparse.ArgumentParser:

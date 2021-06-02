@@ -8,6 +8,7 @@ import BLRun.grnboost2Runner as GRNBOOST2
 import BLRun.leapRunner as LEAP
 import BLRun.jump3Runner as JUMP3
 import BLRun.ppcorRunner as PPCOR
+import BLRun.lookRunner as LOOK
 import BLRun.grisliRunner as GRISLI
 import BLRun.singeRunner as SINGE
 import BLRun.scribeRunner as SCRIBE
@@ -25,6 +26,7 @@ InputMapper = {'SCODE':SCODE.generateInputs,
                'LEAP':LEAP.generateInputs,
                'JUMP3':JUMP3.generateInputs,
                'PPCOR':PPCOR.generateInputs,
+               'LOOK':LOOK.generateInputs,
                'GRISLI':GRISLI.generateInputs,
                'SINGE':SINGE.generateInputs,
                'SCRIBE':SCRIBE.generateInputs}
@@ -43,6 +45,7 @@ AlgorithmMapper = {'SCODE':SCODE.run,
             'LEAP':LEAP.run,
             'JUMP3':JUMP3.run,
             'PPCOR':PPCOR.run,
+            'LOOK':LOOK.run,
             'GRISLI':GRISLI.run,
             'SINGE':SINGE.run,
             'SCRIBE':SCRIBE.run}
@@ -59,7 +62,8 @@ OutputParser = {'SCODE':SCODE.parseOutput,
             'GRNBOOST2':GRNBOOST2.parseOutput,
             'LEAP': LEAP.parseOutput,
             'JUMP3': JUMP3.parseOutput,
-            'PPCOR':PPCOR.parseOutput,
+            'PPCOR':PPCOR.parseOutput,            
+            'LOOK':LOOK.parseOutput,
             'GRISLI':GRISLI.parseOutput,
             'SINGE':SINGE.parseOutput,
             'SCRIBE':SCRIBE.parseOutput}
