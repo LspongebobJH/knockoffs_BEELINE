@@ -41,7 +41,7 @@ docker build -q -t ppcor:base .
 echo "Docker container for PPCOR is built and tagged as ppcor:base"
 
 cd $BASEDIR/Algorithms/LOOK/
-docker build -q -t look:base .
+docker build -t look:base .
 echo "Docker container for LOOK is built and tagged as look:base"
 
 # cd $BASEDIR/Algorithms/SINGE/

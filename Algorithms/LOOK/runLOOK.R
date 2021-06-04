@@ -6,14 +6,20 @@ outFile <-  args[2]
 
 # input expression data
 inputExpr <- read.table(inFile, sep=",", header = 1, row.names = 1)
-inputExpr = matrix(rnorm(1e3), nrow = 10, ncol = 100)
-rownames(inputExpr) = LETTERS[1:10]
 geneNames <- rownames(inputExpr)
 rownames(inputExpr) <- c(geneNames)
+for(i in seq(nrow(inputExpr))){
+  inputExpr[i,] = inputExpr[i,] - mean(inputExpr[i,])
+  inputExpr[i,] = inputExpr[i,] / (1e-8 + sd(inputExpr[i,]))
+}
+knockoffResults = rlookc::generateLooks(
+  t(inputExpr), 
+  mu = 0,
+  Sigma = diag(rep(1, nrow(inputExpr))), #  0.95*cor(t(inputExpr)) + 0.05*
+  statistic = rlookc::marginal_screen,
+  output_type = "statistics"
+)
 
-knockoffResults = rlookc::generateLooks(t(inputExpr), mu = 0, Sigma = cor(t(inputExpr)), 
-                                        statistic = knockoff::stat.lasso_lambdasmax, 
-                                        output_type = "statistics")
 DF = list()
 for(i in seq(nrow(inputExpr))){
   DF[[i]] = data.frame(
