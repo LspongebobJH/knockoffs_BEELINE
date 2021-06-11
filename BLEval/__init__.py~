@@ -36,7 +36,6 @@ from BLEval.computeSpearman import Spearman
 from BLEval.computeNetMotifs import Motifs
 from BLEval.computeEarlyPrec import EarlyPrec
 from BLEval.computeFDR import FDR
-from BLEval.computeUndirectedFDR import UndirectedFDR
 from BLEval.computePathStats import pathAnalysis
 from BLEval.computeSignedEPrec import signedEPrec
 
@@ -239,35 +238,6 @@ class BLEval(object):
             pathAnalysis(dataset, self.input_settings)
 
                  
-    def computeUndirectedFDR(self):
-
-        '''
-        For each algorithm-dataset combination,
-        this function computes the actual/empirical FDR at 
-        various nominal/targeted FDRs. It is computed
-        without reference to the direction of each edge.
-        Target --> regulator is considered "correct".
-        
-        :returns: 
-            A dataframe containing the FDR values 
-            for each algorithm-dataset combination.
-
-        '''
-        X = {}
-        outDir = str(self.output_settings.base_dir) + \
-                 str(self.input_settings.datadir).split("inputs")[1] + "/"
-        for algo in tqdm(self.input_settings.algorithms, unit = " Algorithms"):
-            if algo[1]['should_run'] == True:
-                X[algo[0]] = UndirectedFDR(self, algo[0])
-        X = pd.DataFrame(X)
-        better_format = {}
-        for algo in tqdm(self.input_settings.algorithms, unit = " Algorithms"):
-            if algo[1]['should_run'] == True:
-                better_format[algo[0]] = X[algo[0]].apply(pd.Series)
-                better_format[algo[0]]["method"] = algo[0]
-        better_format = pd.concat(better_format.values())
-        return better_format
-        
     def computeFDR(self):
 
         '''
@@ -286,14 +256,7 @@ class BLEval(object):
         for algo in tqdm(self.input_settings.algorithms, unit = " Algorithms"):
             if algo[1]['should_run'] == True:
                 X[algo[0]] = FDR(self, algo[0])
-        X = pd.DataFrame(X)
-        better_format = {}
-        for algo in tqdm(self.input_settings.algorithms, unit = " Algorithms"):
-            if algo[1]['should_run'] == True:
-                better_format[algo[0]] = X[algo[0]].apply(pd.Series)
-                better_format[algo[0]]["method"] = algo[0]
-        better_format = pd.concat(better_format.values())
-        return better_format
+        return pd.DataFrame(X).T
 
     def computeEarlyPrec(self):
 

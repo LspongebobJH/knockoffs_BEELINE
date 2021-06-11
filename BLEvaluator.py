@@ -50,6 +50,12 @@ def get_parser() -> argparse.ArgumentParser:
     
     parser.add_argument('-e', '--epr', action="store_true", default=False,
       help="Compute median early precision.")
+      
+    parser.add_argument('-f', '--fdr', action="store_true", default=False,
+      help="Compute empirical false discovery rate at a spread of targeted FDR's.")
+    
+    parser.add_argument('-u', '--ufdr', action="store_true", default=False,
+      help="Compute empirical false discovery rate, without considering edge direction, at a spread of targeted FDR's.")
     
     parser.add_argument('-s','--sepr', action="store_true", default=False,
       help="Analyze median (signed) early precision for activation and inhibitory edges.")
@@ -120,6 +126,18 @@ def main():
         TimeDict = evalSummarizer.parseTime()
         pd.DataFrame(TimeDict).to_csv(outDir+'Times.csv')
     
+    # Compute FDR
+    if (opts.fdr):
+        print('\n\nComputing empirical FDR...')
+        FDRDF = evalSummarizer.computeFDR()
+        FDRDF.to_csv(outDir + "FDR.csv")
+     
+    # Compute uFDR
+    if (opts.ufdr):
+        print('\n\nComputing undirected empirical FDR...')
+        FDRDF = evalSummarizer.computeUndirectedFDR()
+        FDRDF.to_csv(outDir + "UndirectedFDR.csv")
+     
     # Compute early precision
     if (opts.epr):
         print('\n\nComputing early precision values...')
