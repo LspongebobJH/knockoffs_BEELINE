@@ -1,4 +1,3 @@
-library(ppcor)
 args <- commandArgs(trailingOnly = T)
 inFile <- args[1]
 outFile <-  args[2]
@@ -11,7 +10,7 @@ rownames(inputExpr) <- c(geneNames)
 # Run pcor using spearman's correlation as mentioned in the PNI paper 
 # Link to paper: https://www.pnas.org/content/114/23/5822
 
-pcorResults=  pcor(x= t(as.matrix(inputExpr)), method = "spearman")
+pcorResults=  ppcor::pcor(x= t(as.matrix(inputExpr)), method = "spearman")
 
 # Write output to a file
 # https://stackoverflow.com/questions/38664241/ranking-and-counting-matrix-elements-in-r

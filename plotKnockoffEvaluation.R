@@ -2,13 +2,17 @@ setwd("~/Desktop/jhu/research/projects/Beeline")
 library(magrittr)
 library(ggplot2)
 
-grabResults = function(pattern, reader = read.csv){
-  x = list.files("outputs/Synthetic", 
-                    pattern = paste0("-", pattern), 
+grabResults = function(pattern, 
+                       reader = read.csv,
+                       base_dir = "outputs/Synthetic", 
+                       #base_dir = "../knockoffs/beeline freezes/outputs 2021-06-11/Synthetic", 
+                       ...){
+  x = list.files(base_dir, 
+                    pattern = paste0("(-|_)", pattern), 
                     ignore.case = T, 
                     full.names = T,
                     recursive = T)
-  lapply(x, read.csv) %>% setNames(x)
+  lapply(x, reader, ...) %>% setNames(x)
 }
 
 # BEELINE metrics
@@ -31,7 +35,7 @@ ggplot(aupr) +
   ggtitle(paste0(metric, " on BEELINE simple simulations"))
 
 # Calibration checks based on BEELINE ground truth
-metric = "FDR"
+metric = "uFDR"
 fdr = grabResults(pattern = metric) 
 plot_data = fdr %>% 
   data.table::rbindlist() %>%
@@ -47,7 +51,7 @@ ggplot(plot_data) +
 
 
 # Calibration checks based on simulated Y
-calibration_checks = grabResults(pattern = "_calibration.Rda", 
+calibration_checks = grabResults(pattern = "calibration.Rda", 
                                  reader = readRDS) 
 plot_data = list()
 for(fname in names(calibration_checks)){

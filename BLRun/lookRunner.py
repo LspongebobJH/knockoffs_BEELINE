@@ -29,14 +29,19 @@ def run(RunnerObj):
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/LOOK/ExpressionData.csv"
-    
     # make output dirs if they do not exist:
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/LOOK/"
-    os.makedirs(outDir, exist_ok = True)
-    
+    os.makedirs(outDir, exist_ok = True)    
     outPath = "data/" +  str(outDir) + 'outFile.txt'
-    cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ look:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 'Rscript runLOOK.R',
-                         inputPath, outPath, '\"'])
+    # options
+    calibrate = str(RunnerObj.params['calibrate'])
+    
+    cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ look:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
+    'Rscript runLOOK.R',
+    '-e',inputPath, 
+    '-o', outPath,
+#    '-c',calibrate, 
+    '\"'])
     print(cmdToRun)
     os.system(cmdToRun)
 
@@ -58,6 +63,6 @@ def parseOutput(RunnerObj):
     outFile.write('Gene1'+'\t'+'Gene2'+'\t'+'EdgeWeight'+'\n')
 
     for idx, row in OutDF.sort_values('q_value', ascending = True).iterrows():
-        outFile.write('\t'.join([row['Gene1'],row['Gene2'],str(-np.log10(row['q_value']))])+'\n')
+        outFile.write('\t'.join([row['Gene1'],row['Gene2'],str(-np.log10(row['q_value'] + 0.000000001))])+'\n')
     outFile.close()
     

@@ -322,6 +322,7 @@ input_settings:
         - name: "LOOK"
           params: 
               should_run: [True]
+              calibrate: [False]
               
                
         - name: "SCODE"

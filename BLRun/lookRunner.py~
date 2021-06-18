@@ -57,7 +57,7 @@ def parseOutput(RunnerObj):
     outFile = open(outDir + 'rankedEdges.csv','w')
     outFile.write('Gene1'+'\t'+'Gene2'+'\t'+'EdgeWeight'+'\n')
 
-    for idx, row in part1.sort_values('q', ascending = True).iterrows():
-        outFile.write('\t'.join([row['Gene1'],row['Gene2'],str(-log10(row['q']))])+'\n')
+    for idx, row in OutDF.sort_values('q_value', ascending = True).iterrows():
+        outFile.write('\t'.join([row['Gene1'],row['Gene2'],str(-np.log10(row['q_value'] + 0.000000001))])+'\n')
     outFile.close()
     
