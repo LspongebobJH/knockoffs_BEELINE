@@ -65,4 +65,4 @@ def parseOutput(RunnerObj):
     for idx, row in OutDF.sort_values('q_value', ascending = True).iterrows():
         outFile.write('\t'.join([row['Gene1'],row['Gene2'],str(-np.log10(row['q_value'] + 0.000000001))])+'\n')
     outFile.close()
-    
+

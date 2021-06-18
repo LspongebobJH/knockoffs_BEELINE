@@ -35,7 +35,7 @@ ggplot(aupr) +
   ggtitle(paste0(metric, " on BEELINE simple simulations"))
 
 # Calibration checks based on BEELINE ground truth
-metric = "uFDR"
+metric = "undirectedFDR"
 fdr = grabResults(pattern = metric) 
 plot_data = fdr %>% 
   data.table::rbindlist() %>%
@@ -44,6 +44,7 @@ plot_data = fdr %>%
   tidyr::separate(X, into = c(NA, "network", "cellcount", "replicate")) 
 ggplot(plot_data) + 
   geom_point(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, shape = cellcount)) + 
+  geom_smooth(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, group = cellcount), se = F) + 
   facet_wrap( ~ network) + 
   ylab(metric) +
   ggtitle("Calibration on BEELINE simple network simulations") + 
