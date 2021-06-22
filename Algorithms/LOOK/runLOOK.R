@@ -26,7 +26,7 @@ inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names
 inputProtein = inputExpr[grepl("p_", rownames(inputExpr)),]
 inputRNA     = inputExpr[!grepl("p_", rownames(inputExpr)),]
 inputRNA = as.matrix(inputRNA)
-geneNames <- rownames(inputRNA)
+geneNames <- rownames(inputRNA) %>% gsub("x_", "", .)
 rownames(inputRNA) <- geneNames
 if(nrow(inputProtein)>0){
   inputProtein = as.matrix(inputProtein)
@@ -281,7 +281,7 @@ arguments$method = "steady_state_protein"
       inputProtein[i,] = inputProtein[i,] / (1e-8 + sd(inputProtein[i,]))
     }
     # Optional calibration check
-    runCalibrationCheck(X = t(inputProtein))
+    # runCalibrationCheck(X = t(inputProtein))
     # Generate knockoffs for the protein levels
     knockoffs = knockoff::create.gaussian(
       t(inputProtein), 

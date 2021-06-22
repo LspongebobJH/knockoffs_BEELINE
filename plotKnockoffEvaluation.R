@@ -51,7 +51,6 @@ ggplot(plot_data) +
   ggtitle("Calibration on BEELINE simple network simulations") + 
   geom_abline(aes(slope = 1, intercept = 0))
 
-
 # Calibration checks based on simulated Y
 calibration_checks = grabResults(pattern = "calibration.Rda", 
                                  reader = readRDS) 
@@ -59,7 +58,7 @@ plot_data = list()
 for(fname in names(calibration_checks)){
   plot_data[[fname]] = data.frame(
     empirical_fdr = calibration_checks[[fname]]$calibration$fdr %>% colMeans, 
-    targeted_fdr = calibration_checks[[fname]]$calibration$targeted_fdrs, 
+    targeted_fdr  = calibration_checks[[fname]]$calibration$targeted_fdrs, 
     network = basename(dirname(dirname(dirname(fname)))),
     replicate = basename(dirname(dirname(fname))) %>% strsplit("-") %>% extract2(1) %>% extract2(4),
     cellcount = basename(dirname(dirname(fname))) %>% strsplit("-") %>% extract2(1) %>% extract2(3)
