@@ -7,8 +7,8 @@ option_list <- list (
               the first column. Required."),
   make_option(c("-o","--outFile"), , type = 'character',
               help= "outFile name to write the output ranked edges. Required."),
-  make_option(c("-c","--calibrate"), action = 'store_true', default = FALSE,
-              type = 'character',
+  make_option(c("-c","--calibrate"), action = 'store', default = FALSE,
+              type = 'logical',
               help= "")
 )
 parser <- OptionParser(option_list = option_list)
@@ -16,16 +16,23 @@ arguments <- parse_args(parser, positional_arguments = FALSE)
 
 
 # Input expression data
-inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
 inputPT = 
   arguments$expressionFile %>% 
   dirname %>% 
   dirname %>%
   file.path("PseudoTime.csv") %>% 
   read.table(sep = ",", header = 1, row.names = 1)
-inputExpr = as.matrix(inputExpr)
-geneNames <- rownames(inputExpr)
-rownames(inputExpr) <- c(geneNames)
+inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
+inputProtein = inputExpr[grepl("p_", rownames(inputExpr)),]
+inputRNA     = inputExpr[!grepl("p_", rownames(inputExpr)),]
+inputRNA = as.matrix(inputRNA)
+geneNames <- rownames(inputRNA)
+rownames(inputRNA) <- geneNames
+if(nrow(inputProtein)>0){
+  inputProtein = as.matrix(inputProtein)
+  rownames(inputProtein) <- geneNames
+} 
+inputExpr = inputRNA
 
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
@@ -53,17 +60,17 @@ runCalibrationCheck = function(X){
     calibration_results = rlookc::simulateY(
       X = X, 
       knockoffs = knockoffs,
-      plot_savepath = paste0(outFile, "_calibration.pdf"), 
+      plot_savepath = paste0(arguments$outFile, "_calibration.pdf"), 
       active_set_size = 2, 
       FUN = function(x) all(x>0) + rbinom(n = 1, size = 1, prob = 0.5)
     )
-    saveRDS(calibration_results, paste0(outFile, "_calibration.Rda"))
+    saveRDS(calibration_results, paste0(arguments$outFile, "_calibration.Rda"))
   }
 }
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "return_to_average"
+arguments$method = "steady_state_protein"
 {
   if( arguments$method == "steady_state" )
   {
@@ -252,6 +259,43 @@ arguments$method = "return_to_average"
           knockoff::stat.glmnet_lambdasmax(X, X_k, y)
       }  
     }
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  } 
+  else if(arguments$method == "steady_state_protein" )
+  { 
+    stopifnot("Protein levels must be provided with prefix 'p_'.\n"=nrow(inputProtein)>0)
+    # Input must be standardized
+    for(i in seq(nrow(inputProtein))){
+      inputProtein[i,] = inputProtein[i,] - mean(inputProtein[i,])
+      inputProtein[i,] = inputProtein[i,] / (1e-8 + sd(inputProtein[i,]))
+    }
+    # Optional calibration check
+    runCalibrationCheck(X = t(inputProtein))
+    # Generate knockoffs for the protein levels
+    knockoffs = knockoff::create.gaussian(
+      t(inputProtein), 
+      mu = 0,
+      Sigma = cor(t(inputProtein))
+    )
+    knockoffResults = list()
+    # Do each gene separately
+    for(k in seq_along(geneNames)){
+      X = t(inputProtein)
+      X_k = knockoffs 
+      y = t(inputRNA)[,k]
+      knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
+    }  
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputExpr))){

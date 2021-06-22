@@ -38,9 +38,9 @@ def run(RunnerObj):
     
     cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ look:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
     'Rscript runLOOK.R',
-    '-e', inputPath, 
+    '-e',inputPath, 
     '-o', outPath,
-    '-c', calibrate, 
+#    '-c',calibrate, 
     '\"'])
     print(cmdToRun)
     os.system(cmdToRun)

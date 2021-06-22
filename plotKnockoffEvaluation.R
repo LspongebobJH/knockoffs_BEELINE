@@ -4,8 +4,9 @@ library(ggplot2)
 
 grabResults = function(pattern, 
                        reader = read.csv,
-                       base_dir = "outputs/Synthetic", 
-                       #base_dir = "../knockoffs/beeline freezes/outputs 2021-06-11/Synthetic", 
+                       base_dir = "outputs/Synthetic_with_protein", 
+                       # To plot an older result:
+                       # base_dir = "../knockoffs/beeline freezes/outputs 2021-06-22/Synthetic", 
                        ...){
   x = list.files(base_dir, 
                     pattern = paste0("(-|_)", pattern), 
