@@ -44,144 +44,227 @@ for(i in seq(nrow(inputExpr))){
   inputExpr[i,] = inputExpr[i,] / (1e-8 + sd(inputExpr[i,]))
 }
 
-# Optional calibration check
-if(arguments$calibrate){
-  knockoffs = rlookc::computeGaussianKnockoffs(X = t(inputExpr),
-                                               mu = 0,
-                                               Sigma = cor(t(inputExpr)), 
-                                               num_realizations = 100)
-  calibration_results = rlookc::simulateY(
-    X = t(inputExpr), 
-    knockoffs = knockoffs,
-    plot_savepath = paste0(outFile, "_calibration.pdf"), 
-    active_set_size = 2, 
-    FUN = function(x) all(x>0) + rbinom(n = 1, size = 1, prob = 0.5)
-  )
-  saveRDS(calibration_results, paste0(outFile, "_calibration.Rda"))
+runCalibrationCheck = function(X){
+  if(arguments$calibrate){
+    knockoffs = rlookc::computeGaussianKnockoffs(X = X,
+                                                 mu = 0,
+                                                 Sigma = cor(X), 
+                                                 num_realizations = 100)
+    calibration_results = rlookc::simulateY(
+      X = X, 
+      knockoffs = knockoffs,
+      plot_savepath = paste0(outFile, "_calibration.pdf"), 
+      active_set_size = 2, 
+      FUN = function(x) all(x>0) + rbinom(n = 1, size = 1, prob = 0.5)
+    )
+    saveRDS(calibration_results, paste0(outFile, "_calibration.Rda"))
+  }
 }
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "average_along_trajectory"
-if( arguments$method == "steady_state" ){
-  knockoffResults = rlookc::generateLooks(
-    t(inputExpr), 
-    mu = 0,
-    Sigma = cor(t(inputExpr)), 
-    statistic = knockoff::stat.lasso_lambdasmax,
-    output_type = "statistics"
-  )
-  
-  DF = list()
-  for(i in seq(nrow(inputExpr))){
-    DF[[i]] = data.frame(
-      Gene1 = geneNames[ i],
-      Gene2 = geneNames[-i],
-      knockoff_stat = knockoffResults[[i]], 
-      q_value = rlookc::knockoffQvals(knockoffResults[[i]], offset = 0)
-    )
-  }
-  DF = data.table::rbindlist(DF)
-} else if(arguments$method == "average_along_trajectory" ){
-  # For multi-branching datasets, do each branch separately
-  # and combine between calculation of symmetric stats and q-values.
-  knockoffResults = list()
-  for(branch in seq(ncol(inputPT))){
-    # Select and order the right cells
-    cells_to_use = data.frame( pt = inputPT[,branch] )
-    cells_to_use[["original_position"]] = seq(nrow(cells_to_use))
-    cells_to_use = cells_to_use[!is.na(cells_to_use[["pt"]]), ]
-    cells_to_use = cells_to_use[order( cells_to_use[["pt"]]), ]
-    ncell = nrow(cells_to_use)
-    # Estimate E[X(t)]
-    num_abcissae = 1e3
-    abcissae = seq(min(cells_to_use[["pt"]]), 
-                   max(cells_to_use[["pt"]]), 
-                   length.out = num_abcissae)
-    smooth_one_gene =  function(i) {
-      to_smooth = cells_to_use
-      to_smooth[["y"]] = inputExpr[i,cells_to_use[["original_position"]]] 
-      predict(
-        loess(y ~ pt, data = to_smooth), 
-        newdata = data.frame(pt = abcissae)
-      )
-    }
-    smoothed_expression = sapply( 1:nrow(inputExpr), smooth_one_gene )
-    stopifnot(ncol(smoothed_expression)==nrow(inputExpr))
-    # Test E[X(t+1, k)] indep. E[X(t, j)] given E[X(t, -j)]
-    # Make a set of knockoffs
-    knockoffs = knockoff::create.gaussian(
-      smoothed_expression, 
+arguments$method = "return_to_average"
+{
+  if( arguments$method == "steady_state" )
+  {
+    
+    # Optional calibration check
+    runCalibrationCheck(X = t(inputExpr))
+    # Use leave-one-out knockoffs
+    knockoffResults = rlookc::generateLooks(
+      t(inputExpr), 
       mu = 0,
-      Sigma = cor(smoothed_expression)
+      Sigma = cor(t(inputExpr)), 
+      statistic = knockoff::stat.lasso_lambdasmax,
+      output_type = "statistics"
     )
     
-    # Do each gene separately
-    for(k in seq_along(geneNames)){
-      if(length(knockoffResults) < k){
-        knockoffResults[[k]] = rep(0, length(geneNames))
-      }
-      knockoffResults[[k]] = knockoffResults[[k]] +
-        knockoff::stat.glmnet_lambdasmax(smoothed_expression[1:(num_abcissae-1), ],
-                                         knockoffs          [1:(num_abcissae-1), ], 
-                                         smoothed_expression[2:num_abcissae, k])
-    }  
-  }
-  # Assemble results
-  DF = list()
-  for(k in seq(nrow(inputExpr))){
-    w = knockoffResults[[k]][-k] # Disallow autoregulation
-    DF[[k]] = data.frame(
-      Gene1 = geneNames[ k],
-      Gene2 = geneNames[-k],
-      knockoff_stat = w, 
-      q_value = rlookc::knockoffQvals(w, offset = 0)
+    DF = list()
+    for(i in seq(nrow(inputExpr))){
+      DF[[i]] = data.frame(
+        Gene1 = geneNames[ i],
+        Gene2 = geneNames[-i],
+        knockoff_stat = knockoffResults[[i]], 
+        q_value = rlookc::knockoffQvals(knockoffResults[[i]], offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  } 
+  else if(arguments$method == "return_to_average" )
+  {
+    # Test E[X(t+1, k)] indep. X(t, j) given X(t, -j)
+    # (Averaging is used for the future state, but not the current state)
+    # We just need one set of knockoffs
+    knockoffs = knockoff::create.gaussian(
+      t(inputExpr), 
+      mu = 0,
+      Sigma = cor(t(inputExpr))
     )
-  }
-  DF = data.table::rbindlist(DF)
-} else if(arguments$method == "order_cells" ){
-  # We just need one set of knockoffs
-  knockoffs = knockoff::create.gaussian(
-    t(inputExpr), 
-    mu = 0,
-    Sigma = cor(t(inputExpr))
-  )
-  # For multi-branching datasets, do each branch separately
-  # and combine between calculation of symmetric stats and q-values.
-  knockoffResults = list()
-  for(branch in seq(ncol(inputPT))){
-    # Select and order the right cells
-    # train on the next closest cell ahead of you, regardless of how far away it is...
-    cells_to_use = data.frame( pt = inputPT[,branch] )
-    cells_to_use[["original_position"]] = seq(nrow(cells_to_use))
-    cells_to_use = cells_to_use[!is.na(cells_to_use[["pt"]]), ]
-    cells_to_use = cells_to_use[order( cells_to_use[["pt"]]), ]
-    cells_to_use = cells_to_use[["original_position"]]
-    ncell = length(cells_to_use)
-    # Do each gene separately
-    for(k in seq_along(geneNames)){
-      if(length(knockoffResults) < k){
-        knockoffResults[[k]] = rep(0, length(geneNames))
+    # For multi-branching datasets, do each branch separately
+    # and combine symmetric stats before getting q-values.
+    knockoffResults = list()
+    for(branch in seq(ncol(inputPT))){
+      # Select and order the right cells
+      cells_to_use = data.frame( pt = inputPT[,branch] )
+      cells_to_use[["original_position"]] = seq(nrow(cells_to_use))
+      cells_to_use = cells_to_use[!is.na(cells_to_use[["pt"]]), ]
+      cells_to_use = cells_to_use[order( cells_to_use[["pt"]]), ]
+      ncell = nrow(cells_to_use)
+      # Estimate E[X(t)]
+      num_abcissae = 1e3
+      abcissae = seq(min(cells_to_use[["pt"]]), 
+                     max(cells_to_use[["pt"]]), 
+                     length.out = num_abcissae)
+      smooth_one_gene =  function(gene, evaluate_at = abcissae) {
+        to_smooth = cells_to_use
+        to_smooth[["y"]] = inputExpr[gene,cells_to_use[["original_position"]]] 
+        predict(
+          loess(y ~ pt, data = to_smooth), 
+          newdata = data.frame(pt = evaluate_at)
+        )
       }
-      X = t(inputExpr)[cells_to_use[1:(ncell-1)], ]
-      X_k = knockoffs [cells_to_use[1:(ncell-1)], ]
-      y = t(inputExpr)[cells_to_use[2: ncell   ],k]
-      knockoffResults[[k]] = knockoffResults[[k]] +
-        knockoff::stat.glmnet_lambdasmax(X, X_k, y)
-    }  
-  }
-  # Assemble results
-  DF = list()
-  for(k in seq(nrow(inputExpr))){
-    w = knockoffResults[[k]][-k] # Disallow autoregulation
-    DF[[k]] = data.frame(
-      Gene1 = geneNames[ k],
-      Gene2 = geneNames[-k],
-      knockoff_stat = w, 
-      q_value = rlookc::knockoffQvals(w, offset = 0)
+      # Do each gene separately
+      for(k in seq_along(geneNames)){
+        if(length(knockoffResults) < k){
+          knockoffResults[[k]] = rep(0, length(geneNames))
+        }
+        # Use observed current state
+        X = t(inputExpr)[cells_to_use[["original_position"]],]
+        X_k = knockoffs [cells_to_use[["original_position"]],]
+        # Use expected future state assuming a rapid return to average
+        timestep_length = diff(abcissae)[[1]]
+        future_timepoints = cells_to_use[["pt"]] + timestep_length
+        Y =  smooth_one_gene(gene = k, evaluate_at = future_timepoints)
+        # Don't run off the end of the trajectory and get garbage or missing future estimates
+        keep = !is.na(Y)
+        X   = X[keep, ]
+        X_k = X_k[keep, ]
+        Y   = Y[keep]
+        # Different branches are combined by adding the symmetric stats
+        knockoffResults[[k]] = knockoffResults[[k]] +
+          knockoff::stat.glmnet_lambdasmax(X, X_k, Y)
+      }  
+    }
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  } 
+  else if(arguments$method == "average_along_trajectory" )
+  {
+    # For multi-branching datasets, do each branch separately
+    # and combine between calculation of symmetric stats and q-values.
+    knockoffResults = list()
+    for(branch in seq(ncol(inputPT))){
+      # Select and order the right cells
+      cells_to_use = data.frame( pt = inputPT[,branch] )
+      cells_to_use[["original_position"]] = seq(nrow(cells_to_use))
+      cells_to_use = cells_to_use[!is.na(cells_to_use[["pt"]]), ]
+      cells_to_use = cells_to_use[order( cells_to_use[["pt"]]), ]
+      ncell = nrow(cells_to_use)
+      # Estimate E[X(t)]
+      num_abcissae = 1e3
+      abcissae = seq(min(cells_to_use[["pt"]]), 
+                     max(cells_to_use[["pt"]]), 
+                     length.out = num_abcissae)
+      smooth_one_gene =  function(i) {
+        to_smooth = cells_to_use
+        to_smooth[["y"]] = inputExpr[i,cells_to_use[["original_position"]]] 
+        predict(
+          loess(y ~ pt, data = to_smooth), 
+          newdata = data.frame(pt = abcissae)
+        )
+      }
+      smoothed_expression = sapply( 1:nrow(inputExpr), smooth_one_gene )
+      stopifnot(ncol(smoothed_expression)==nrow(inputExpr))
+      runCalibrationCheck(X = smoothed_expression)
+      
+      # Test E[X(t+1, k)] indep. E[X(t, j)] given E[X(t, -j)]
+      # (Averaging is used for both the future state and the current state)
+      # Make a set of knockoffs
+      knockoffs = knockoff::create.gaussian(
+        smoothed_expression, 
+        mu = 0,
+        Sigma = cor(smoothed_expression)
+      )
+      
+      # Do each gene separately
+      for(k in seq_along(geneNames)){
+        if(length(knockoffResults) < k){
+          knockoffResults[[k]] = rep(0, length(geneNames))
+        }
+        knockoffResults[[k]] = knockoffResults[[k]] +
+          knockoff::stat.glmnet_lambdasmax(smoothed_expression[1:(num_abcissae-1), ],
+                                           knockoffs          [1:(num_abcissae-1), ], 
+                                           smoothed_expression[2:num_abcissae, k])
+      }  
+    }
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  } 
+  else if(arguments$method == "order_cells" )
+  {
+    # We just need one set of knockoffs
+    knockoffs = knockoff::create.gaussian(
+      t(inputExpr), 
+      mu = 0,
+      Sigma = cor(t(inputExpr))
     )
+    # For multi-branching datasets, do each branch separately
+    # and combine between calculation of symmetric stats and q-values.
+    knockoffResults = list()
+    for(branch in seq(ncol(inputPT))){
+      # Select and order the right cells
+      # train on the next closest cell ahead of you, regardless of how far away it is...
+      cells_to_use = data.frame( pt = inputPT[,branch] )
+      cells_to_use[["original_position"]] = seq(nrow(cells_to_use))
+      cells_to_use = cells_to_use[!is.na(cells_to_use[["pt"]]), ]
+      cells_to_use = cells_to_use[order( cells_to_use[["pt"]]), ]
+      cells_to_use = cells_to_use[["original_position"]]
+      ncell = length(cells_to_use)
+      # Do each gene separately
+      for(k in seq_along(geneNames)){
+        if(length(knockoffResults) < k){
+          knockoffResults[[k]] = rep(0, length(geneNames))
+        }
+        X = t(inputExpr)[cells_to_use[1:(ncell-1)], ]
+        X_k = knockoffs [cells_to_use[1:(ncell-1)], ]
+        y = t(inputExpr)[cells_to_use[2: ncell   ],k]
+        knockoffResults[[k]] = knockoffResults[[k]] +
+          knockoff::stat.glmnet_lambdasmax(X, X_k, y)
+      }  
+    }
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
   }
-  DF = data.table::rbindlist(DF)
 }
 
 
