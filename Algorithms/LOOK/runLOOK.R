@@ -23,14 +23,19 @@ inputPT =
   file.path("PseudoTime.csv") %>% 
   read.table(sep = ",", header = 1, row.names = 1)
 inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
-inputProtein = inputExpr[grepl("p_", rownames(inputExpr)),]
-inputRNA     = inputExpr[!grepl("p_", rownames(inputExpr)),]
+inputProtein = inputExpr[grepl("^p_", rownames(inputExpr)),]
+inputRNA     = inputExpr[grepl("^x_", rownames(inputExpr)),]
+inputRNAvelocity     = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
 inputRNA = as.matrix(inputRNA)
 geneNames <- rownames(inputRNA) %>% gsub("x_", "", .)
 rownames(inputRNA) <- geneNames
 if(nrow(inputProtein)>0){
   inputProtein = as.matrix(inputProtein)
   rownames(inputProtein) <- geneNames
+} 
+if(nrow(inputRNAvelocity)>0){
+  inputRNAvelocity = as.matrix(inputRNAvelocity)
+  rownames(inputRNAvelocity) <- geneNames
 } 
 inputExpr = inputRNA
 
@@ -70,7 +75,7 @@ runCalibrationCheck = function(X){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "steady_state_protein"
+arguments$method = "rna_velocity_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
@@ -294,6 +299,74 @@ arguments$method = "steady_state_protein"
       X = t(inputProtein)
       X_k = knockoffs 
       y = t(inputRNA)[,k]
+      knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
+    }  
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  }
+  else if(arguments$method == "rna_velocity_protein_predictor" )
+  { 
+    stopifnot("Protein levels must be provided with prefix 'p_'.          \n"=nrow(inputProtein)>0)
+    stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
+    # Input must be standardized
+    for(i in seq(nrow(inputProtein))){
+      inputProtein[i,] = inputProtein[i,] - mean(inputProtein[i,])
+      inputProtein[i,] = inputProtein[i,] / (1e-8 + sd(inputProtein[i,]))
+    }
+    # Optional calibration check
+    # runCalibrationCheck(X = t(inputProtein))
+    # Generate knockoffs for the protein levels
+    knockoffs = knockoff::create.gaussian(
+      t(inputProtein), 
+      mu = 0,
+      Sigma = cor(t(inputProtein))
+    )
+    knockoffResults = list()
+    # Do each gene separately
+    for(k in seq_along(geneNames)){
+      X = t(inputProtein)
+      X_k = knockoffs 
+      y = t(inputRNAvelocity)[,k]
+      knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
+    }  
+    # Assemble results
+    DF = list()
+    for(k in seq(nrow(inputExpr))){
+      w = knockoffResults[[k]][-k] # Disallow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[-k],
+        knockoff_stat = w, 
+        q_value = rlookc::knockoffQvals(w, offset = 0)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  }
+  else if(arguments$method == "rna_velocity_rna_predictor" )
+  { 
+    stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
+    # Generate knockoffs for the rna levels
+    knockoffs = knockoff::create.gaussian(
+      t(inputExpr), 
+      mu = 0,
+      Sigma = cor(t(inputExpr))
+    )
+    knockoffResults = list()
+    # Do each gene separately
+    for(k in seq_along(geneNames)){
+      X = t(inputExpr)
+      X_k = knockoffs 
+      y = t(inputRNAvelocity)[,k]
       knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
     }  
     # Assemble results
