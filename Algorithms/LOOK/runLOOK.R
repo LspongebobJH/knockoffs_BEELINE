@@ -15,30 +15,47 @@ parser <- OptionParser(option_list = option_list)
 arguments <- parse_args(parser, positional_arguments = FALSE)
 
 
+standardize = function(inputExpr){
+  for(i in seq(nrow(inputExpr))){
+    inputExpr[i,] = inputExpr[i,] - mean(inputExpr[i,])
+    inputExpr[i,] = inputExpr[i,] / (1e-8 + sd(inputExpr[i,]))
+  }
+  inputExpr
+}
 # Input expression data
 inputPT = 
   arguments$expressionFile %>% 
   dirname %>% 
-  dirname %>%
+  dirname %>% 
   file.path("PseudoTime.csv") %>% 
   read.table(sep = ",", header = 1, row.names = 1)
 inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
+inputExpr = inputExpr[,order(inputPT[[1]])]
+stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
+            nrow(inputPT)==ncol(inputExpr))
 inputProtein = inputExpr[grepl("^p_", rownames(inputExpr)),]
 inputRNA     = inputExpr[grepl("^x_", rownames(inputExpr)),]
 inputRNAvelocity     = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
-inputRNA = as.matrix(inputRNA)
-geneNames <- rownames(inputRNA) %>% gsub("x_", "", .)
+inputRNA = as.matrix(inputRNA) %>% standardize
+geneNames_more_like_cleanNames = function(x){
+  x %>% gsub("^velocity_", "", .) %>% gsub("^(p|x)_", "", .) 
+}
+geneNames <- rownames(inputRNA) %>% geneNames_more_like_cleanNames
 rownames(inputRNA) <- geneNames
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein)
-  rownames(inputProtein) <- geneNames
+  inputProtein = as.matrix(inputProtein) %>% log10 %>% standardize
+  rownames(inputProtein) %<>% geneNames_more_like_cleanNames
+  inputProtein = inputProtein[geneNames, ]
 } 
 if(nrow(inputRNAvelocity)>0){
-  inputRNAvelocity = as.matrix(inputRNAvelocity)
-  rownames(inputRNAvelocity) <- geneNames
+  inputRNAvelocity = as.matrix(inputRNAvelocity) %>% standardize
+  rownames(inputRNAvelocity) %<>% geneNames_more_like_cleanNames
+  inputRNAvelocity = inputRNAvelocity[geneNames, ]
 } 
-inputExpr = inputRNA
-
+rm(inputExpr)
+image(inputRNA)
+image(inputProtein)
+image(inputRNAvelocity)
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
 # inputExpr = sapply(seq(nrow(neighbors$nn.dist)),
@@ -50,13 +67,8 @@ inputExpr = inputRNA
 #   inputExpr[i,] = rank( inputExpr[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
 # }
 
-# Input must be standardized
-for(i in seq(nrow(inputExpr))){
-  inputExpr[i,] = inputExpr[i,] - mean(inputExpr[i,])
-  inputExpr[i,] = inputExpr[i,] / (1e-8 + sd(inputExpr[i,]))
-}
 
-runCalibrationCheck = function(X){
+runCalibrationCheck = function(X, noiselevel = 1){
   if(arguments$calibrate){
     knockoffs = rlookc::computeGaussianKnockoffs(X = X,
                                                  mu = 0,
@@ -67,19 +79,19 @@ runCalibrationCheck = function(X){
       knockoffs = knockoffs,
       plot_savepath = paste0(arguments$outFile, "_calibration.pdf"), 
       active_set_size = 2, 
-      FUN = function(x) all(x>0) + rbinom(n = 1, size = 1, prob = 0.5)
+      FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
     )
     saveRDS(calibration_results, paste0(arguments$outFile, "_calibration.Rda"))
+    return(invisible(calibration_results))
   }
 }
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_velocity_protein_predictor"
+arguments$method = "rna_velocity_rna_predictor"
 {
   if( arguments$method == "steady_state" )
   {
-    
     # Optional calibration check
     runCalibrationCheck(X = t(inputExpr))
     # Use leave-one-out knockoffs
@@ -314,6 +326,42 @@ arguments$method = "rna_velocity_protein_predictor"
     }
     DF = data.table::rbindlist(DF)
   }
+  else if(arguments$method == "rna_velocity_both_predictor" )
+  { 
+    stopifnot("Protein levels must be provided with prefix 'p_'.          \n"=nrow(inputProtein)>0)
+    stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
+    # Generate knockoffs for combined RNA and protein levels
+    X = t(inputProtein) 
+    knockoffs = knockoff::create.gaussian(
+      X, 
+      mu = 0,
+      Sigma = cor(X)
+    )
+    
+    # Optional calibration check
+    # x = runCalibrationCheck(X, noiselevel = 1)
+    
+    # Do each gene separately
+    q = w = list()
+    for(k in seq_along(geneNames)){
+      y = t(inputRNAvelocity)[,k]
+      # subtract off decay rate; use only production rate
+      y = y - predict(lm(y~inputRNA[k,])) 
+      w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
+    }  
+    # Assemble results
+    DF = list()
+    for(k in seq_along(geneNames)){
+      keep = seq_along(geneNames) #[-k] allow autoregulation
+      DF[[k]] = data.frame(
+        Gene1 = geneNames[ k],
+        Gene2 = geneNames[keep],
+        knockoff_stat = w[[k]][keep], 
+        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 1)
+      )
+    }
+    DF = data.table::rbindlist(DF)
+  }
   else if(arguments$method == "rna_velocity_protein_predictor" )
   { 
     stopifnot("Protein levels must be provided with prefix 'p_'.          \n"=nrow(inputProtein)>0)
@@ -357,21 +405,21 @@ arguments$method = "rna_velocity_protein_predictor"
     stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
     # Generate knockoffs for the rna levels
     knockoffs = knockoff::create.gaussian(
-      t(inputExpr), 
+      t(inputRNA), 
       mu = 0,
-      Sigma = cor(t(inputExpr))
+      Sigma = cor(t(inputRNA))
     )
     knockoffResults = list()
     # Do each gene separately
     for(k in seq_along(geneNames)){
-      X = t(inputExpr)
+      X = t(inputRNA)
       X_k = knockoffs 
       y = t(inputRNAvelocity)[,k]
       knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
     }  
     # Assemble results
     DF = list()
-    for(k in seq(nrow(inputExpr))){
+    for(k in seq(nrow(inputRNA))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
         Gene1 = geneNames[ k],

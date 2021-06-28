@@ -4,9 +4,9 @@ library(ggplot2)
 
 grabResults = function(pattern, 
                        reader = read.csv,
-                       # base_dir = "outputs/Synthetic_with_protein_and_velocity", 
+                       base_dir = "outputs/Synthetic_with_protein_and_velocity", 
                        # To plot an older result:
-                       base_dir = "../knockoffs/beeline freezes/outputs 2021-06-22 2/Synthetic_with_protein",
+                       # base_dir = "../knockoffs/beeline freezes/outputs 2021-06-22 2/Synthetic_with_protein",
                        ...){
   x = list.files(base_dir, 
                     pattern = paste0("(-|_)", pattern), 
@@ -36,7 +36,7 @@ ggplot(aupr) +
   ggtitle(paste0(metric, " on BEELINE simple simulations"))
 
 # Calibration checks based on BEELINE ground truth
-metric = "undirectedFDR"
+metric = "FDR"
 fdr = grabResults(pattern = metric) 
 plot_data = fdr %>% 
   data.table::rbindlist() %>%
