@@ -88,7 +88,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_velocity_protein_predictor"
+arguments$method = "rna_production_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
@@ -326,7 +326,7 @@ arguments$method = "rna_velocity_protein_predictor"
     }
     DF = data.table::rbindlist(DF)
   }
-  else if(arguments$method == "rna_velocity_both_predictor" )
+  else if(arguments$method == "rna_production_protein_predictor" )
   { 
     stopifnot("Protein levels must be provided with prefix 'p_'.          \n"=nrow(inputProtein)>0)
     stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
@@ -345,7 +345,7 @@ arguments$method = "rna_velocity_protein_predictor"
     q = w = list()
     for(k in seq_along(geneNames)){
       y = t(inputRNAvelocity)[,k]
-      # subtract off decay rate; use only production rate
+      # subtract off decay rate; only production rate remains
       y = y - predict(lm(y~inputRNA[k,])) 
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
     }  
