@@ -88,7 +88,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_velocity_rna_predictor"
+arguments$method = "rna_velocity_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
@@ -244,7 +244,7 @@ arguments$method = "rna_velocity_rna_predictor"
     }
     DF = data.table::rbindlist(DF)
   } 
-  else if(arguments$method == "order_cells" )
+  else if(arguments$method == "next_cell" )
   {
     # We just need one set of knockoffs
     knockoffs = knockoff::create.gaussian(
@@ -389,7 +389,7 @@ arguments$method = "rna_velocity_rna_predictor"
     }  
     # Assemble results
     DF = list()
-    for(k in seq(nrow(inputExpr))){
+    for(k in seq(nrow(inputRNA))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
         Gene1 = geneNames[ k],
