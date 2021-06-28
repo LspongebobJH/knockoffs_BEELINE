@@ -14,6 +14,10 @@ option_list <- list (
 parser <- OptionParser(option_list = option_list)
 arguments <- parse_args(parser, positional_arguments = FALSE)
 
+# For manual inspection of the process
+# arguments = list(
+#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-1/LOOK/ExpressionData.csv"
+# )
 
 standardize = function(inputExpr){
   for(i in seq(nrow(inputExpr))){
@@ -56,6 +60,33 @@ rm(inputExpr)
 image(inputRNA)
 image(inputProtein)
 image(inputRNAvelocity)
+k = "g15"
+km1 = "g14"
+km2 = "g13"
+plotdata = data.frame(
+  false_positive_candidate_regulator = inputProtein[km2,], 
+  regulator = inputProtein[km1,], 
+  conc = inputRNA[k,], 
+  velo = inputRNAvelocity[k,], 
+  time = sort(inputPT[[1]])
+)
+mod = lm(velo ~ conc, subset(plotdata, conc > 2))
+plotdata$decay = plotdata$conc * mod$coefficients["conc"]
+plotdata$production = plotdata$velo - plotdata$decay
+ggplot( plotdata ) + 
+  geom_point(aes(x = regulator, y = production), colour = "black") + 
+  ggtitle("Regulator vs production rate, LL, g15")
+
+ggplot( plotdata ) + 
+  geom_point(aes(x = false_positive_candidate_regulator, y = production), colour = "black") + 
+  ggtitle("Next best option (false positive!)")
+
+ggplot( plotdata ) + 
+  geom_point(aes(x = conc, y = velo), colour = "purple") + 
+  geom_point(aes(x = conc, y = decay), colour = "red") + 
+  geom_point(aes(x = conc, y = production), colour = "blue") + 
+  ggtitle("Production, decay, total, LL, g15")
+
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
 # inputExpr = sapply(seq(nrow(neighbors$nn.dist)),
