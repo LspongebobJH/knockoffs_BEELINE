@@ -1,3 +1,4 @@
+suppressPackageStartupMessages(library (ggplot2, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library (magrittr, warn.conflicts = FALSE, quietly = TRUE))
 suppressPackageStartupMessages(library (optparse, warn.conflicts = FALSE, quietly = TRUE))
 option_list <- list (
@@ -14,9 +15,16 @@ option_list <- list (
 parser <- OptionParser(option_list = option_list)
 arguments <- parse_args(parser, positional_arguments = FALSE)
 
+nonparametricMarginalScreen = function(X, knockoffs, y){
+  sapply(1:ncol(X), function(k) loess(y ~ knockoffs[,k])$s - loess(y ~ X[,k])$s )
+}
+
+knockoffEmpiricalCorrection = function(w){
+  w - median(w)
+}
 # For manual inspection of the process
 # arguments = list(
-#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-1/LOOK/ExpressionData.csv"
+#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-10/LOOK/ExpressionData.csv"
 # )
 
 standardize = function(inputExpr){
@@ -35,19 +43,27 @@ inputPT =
   read.table(sep = ",", header = 1, row.names = 1)
 inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
 inputExpr = inputExpr[,order(inputPT[[1]])]
+inputPT   = inputPT[order(inputPT[[1]]),]
 stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
             nrow(inputPT)==ncol(inputExpr))
+# Separate different types of measurements
 inputProtein = inputExpr[grepl("^p_", rownames(inputExpr)),]
 inputRNA     = inputExpr[grepl("^x_", rownames(inputExpr)),]
 inputRNAvelocity     = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
 inputRNA = as.matrix(inputRNA) %>% standardize
+# Gene name handling:
+# Clean
 geneNames_more_like_cleanNames = function(x){
   x %>% gsub("^velocity_", "", .) %>% gsub("^(p|x)_", "", .) 
 }
-geneNames <- rownames(inputRNA) %>% geneNames_more_like_cleanNames
+geneNames <- rownames(inputRNA) %>% geneNames_more_like_cleanNames 
 rownames(inputRNA) <- geneNames
+# Sort
+geneNames %<>% gtools::mixedsort()
+inputRNA = inputRNA[geneNames, ]
+# Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% log10 %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 } 
@@ -60,7 +76,6 @@ rm(inputExpr)
 image(inputRNA)
 image(inputProtein)
 image(inputRNAvelocity)
-
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
 # inputExpr = sapply(seq(nrow(neighbors$nn.dist)),
@@ -91,25 +106,26 @@ runCalibrationCheck = function(X, noiselevel = 1){
   }
 }
 
+
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor"
+arguments$method = "steady_state"#"rna_production_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
     # Optional calibration check
-    runCalibrationCheck(X = t(inputExpr))
+    runCalibrationCheck(X = t(inputRNA))
     # Use leave-one-out knockoffs
     knockoffResults = rlookc::generateLooks(
-      t(inputExpr), 
+      t(inputRNA), 
       mu = 0,
-      Sigma = cor(t(inputExpr)), 
+      Sigma = cor(t(inputRNA)), 
       statistic = knockoff::stat.lasso_lambdasmax,
       output_type = "statistics"
-    )
+    ) %>% lapply(knockoffEmpiricalCorrection)
     
     DF = list()
-    for(i in seq(nrow(inputExpr))){
+    for(i in seq(nrow(inputRNA))){
       DF[[i]] = data.frame(
         Gene1 = geneNames[ i],
         Gene2 = geneNames[-i],
@@ -357,17 +373,20 @@ arguments$method = "rna_production_protein_predictor"
       decay_rate = list()
       for(bin in levels(concentration_bins)){
         idx = concentration_bins==bin
+        if(sum(idx)<10){next}
         decay_rate[[bin]] = coef( quantreg::rq(y[idx] ~ concentration[idx] ) )
         clip(min(concentration[idx]), max(concentration[idx]), y1 = -100, y2 = 100)
         abline(decay_rate[[bin]][[1]], decay_rate[[bin]][[2]])
       }
+      nona = function(x) x[!is.na(x)]
       negative_only = function(x) x[x<0]
-      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% negative_only %>% median
+      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% median
       clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
       abline(a = 0, b = decay_rate, col = "red")
     
       # subtract off decay rate; only production rate remains to be modeled
       y = y - concentration*decay_rate
+      # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
     }  
     # Assemble results
@@ -453,6 +472,29 @@ arguments$method = "rna_production_protein_predictor"
   }
 }
 
+# What's the pattern of discoveries?
+try({
+  p = ggplot(DF) + 
+    geom_tile(
+      aes(
+        x = Gene1 %>% gsub("^g", "", .) %>% as.numeric,
+        y = Gene2 %>% gsub("^g", "", .) %>% as.numeric,
+        fill = knockoff_stat
+      ) 
+    ) + 
+    geom_point(
+      aes(
+        x = Gene1 %>% gsub("^g", "", .) %>% as.numeric,
+        y = Gene2 %>% gsub("^g", "", .) %>% as.numeric,
+        alpha = q_value < 0.25 
+      ), 
+      colour = "red"
+    ) + 
+    xlab("Target") + ylab("TF") + 
+    ggtitle("Pattern of discoveries") 
+  print(p)
+  ggsave(paste0(arguments$outFile, "_discoveries.pdf"), p, width = 6, height = 6)
+})
 
 # Write output to a file
 outDF <- DF[order(DF$q_value, decreasing=FALSE), ]

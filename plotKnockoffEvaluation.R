@@ -36,7 +36,7 @@ ggplot(aupr) +
   ggtitle(paste0(metric, " on BEELINE simple simulations"))
 
 # Calibration checks based on BEELINE ground truth
-metric = "FDR"
+metric = "undirectedFDR"
 fdr = grabResults(pattern = metric) 
 plot_data = fdr %>% 
   data.table::rbindlist() %>%
