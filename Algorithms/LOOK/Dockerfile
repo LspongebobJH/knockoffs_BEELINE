@@ -19,5 +19,6 @@ COPY rlookc_0.1.0.tar.gz /
 RUN R -e "install.packages('rlookc_0.1.0.tar.gz', type = 'source')"
 RUN R -e "install.packages(c('optparse'))"
 RUN R -e "install.packages(c('ggplot2'))"
+RUN R -e "install.packages(c('quantreg'))"
 COPY runLOOK.R /
 

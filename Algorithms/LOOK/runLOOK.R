@@ -60,32 +60,6 @@ rm(inputExpr)
 image(inputRNA)
 image(inputProtein)
 image(inputRNAvelocity)
-k = "g15"
-km1 = "g14"
-km2 = "g13"
-plotdata = data.frame(
-  false_positive_candidate_regulator = inputProtein[km2,], 
-  regulator = inputProtein[km1,], 
-  conc = inputRNA[k,], 
-  velo = inputRNAvelocity[k,], 
-  time = sort(inputPT[[1]])
-)
-mod = lm(velo ~ conc, subset(plotdata, conc > 2))
-plotdata$decay = plotdata$conc * mod$coefficients["conc"]
-plotdata$production = plotdata$velo - plotdata$decay
-ggplot( plotdata ) + 
-  geom_point(aes(x = regulator, y = production), colour = "black") + 
-  ggtitle("Regulator vs production rate, LL, g15")
-
-ggplot( plotdata ) + 
-  geom_point(aes(x = false_positive_candidate_regulator, y = production), colour = "black") + 
-  ggtitle("Next best option (false positive!)")
-
-ggplot( plotdata ) + 
-  geom_point(aes(x = conc, y = velo), colour = "purple") + 
-  geom_point(aes(x = conc, y = decay), colour = "red") + 
-  geom_point(aes(x = conc, y = production), colour = "blue") + 
-  ggtitle("Production, decay, total, LL, g15")
 
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
@@ -376,8 +350,24 @@ arguments$method = "rna_production_protein_predictor"
     q = w = list()
     for(k in seq_along(geneNames)){
       y = t(inputRNAvelocity)[,k]
-      # subtract off decay rate; only production rate remains
-      y = y - predict(lm(y~inputRNA[k,])) 
+      # Infer the decay rate in a robust way (piecewise linear)
+      concentration = inputRNA[k,]
+      plot(concentration, y, pch = ".")
+      concentration_bins = cut(concentration, breaks = 5)
+      decay_rate = list()
+      for(bin in levels(concentration_bins)){
+        idx = concentration_bins==bin
+        decay_rate[[bin]] = coef( quantreg::rq(y[idx] ~ concentration[idx] ) )
+        clip(min(concentration[idx]), max(concentration[idx]), y1 = -100, y2 = 100)
+        abline(decay_rate[[bin]][[1]], decay_rate[[bin]][[2]])
+      }
+      negative_only = function(x) x[x<0]
+      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% negative_only %>% median
+      clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
+      abline(a = 0, b = decay_rate, col = "red")
+    
+      # subtract off decay rate; only production rate remains to be modeled
+      y = y - concentration*decay_rate
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
     }  
     # Assemble results
