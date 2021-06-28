@@ -20,7 +20,8 @@ nonparametricMarginalScreen = function(X, knockoffs, y){
 }
 
 knockoffEmpiricalCorrection = function(w){
-  w - median(w)
+  inflation = max( median(w), 0 )
+  w - inflation
 }
 # For manual inspection of the process
 # arguments = list(
