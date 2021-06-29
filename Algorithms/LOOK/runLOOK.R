@@ -19,10 +19,6 @@ nonparametricMarginalScreen = function(X, knockoffs, y){
   sapply(1:ncol(X), function(k) loess(y ~ knockoffs[,k])$s - loess(y ~ X[,k])$s )
 }
 
-knockoffEmpiricalCorrection = function(w){
-  inflation = max( median(w), 0 )
-  w - inflation
-}
 # For manual inspection of the process
 # arguments = list(
 #   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-10/LOOK/ExpressionData.csv",
@@ -87,6 +83,16 @@ rm(inputExpr)
 #   inputExpr[i,] = rank( inputExpr[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
 # }
 
+# Apply "genomic control" if input options say so
+arguments$center_knockoff_stats = T
+knockoffEmpiricalCorrection = function(w){
+  if(arguments$center_knockoff_stats){
+    inflation = max( median(w), 0 )
+  } else {
+    inflation = 0
+  }
+  w - inflation
+}
 
 runCalibrationCheck = function(X, noiselevel = 1){
   if(arguments$calibrate){
@@ -195,6 +201,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
           knockoff::stat.glmnet_lambdasmax(X, X_k, Y)
       }  
     }
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputExpr))){
@@ -257,6 +264,8 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
                                            smoothed_expression[2:num_abcissae, k])
       }  
     }
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
+    
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputExpr))){
@@ -302,6 +311,8 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
           knockoff::stat.glmnet_lambdasmax(X, X_k, y)
       }  
     }
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
+    
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputExpr))){
@@ -339,6 +350,8 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       y = t(inputRNA)[,k]
       knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
     }  
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
+    
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputExpr))){
@@ -365,7 +378,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
     )
     
     # Optional calibration check
-    x = runCalibrationCheck(X, noiselevel = 1)
+    # x = runCalibrationCheck(X, noiselevel = 1)
     
     # Do each gene separately
     q = w = list()
@@ -409,6 +422,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
         
 
     }  
+    w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
@@ -447,6 +461,8 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       y = t(inputRNAvelocity)[,k]
       knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
     }  
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
+    
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputRNA))){
@@ -477,6 +493,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       y = t(inputRNAvelocity)[,k]
       knockoffResults[[k]] = knockoff::stat.glmnet_lambdasmax(X, X_k, y)
     }  
+    knockoffResults %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq(nrow(inputRNA))){
