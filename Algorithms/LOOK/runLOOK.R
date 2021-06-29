@@ -94,7 +94,6 @@ runCalibrationCheck = function(X, noiselevel = 1){
                                                  mu = 0,
                                                  Sigma = cor(X), 
                                                  num_realizations = 100)
-    message("Checking calibration with a univariate sigmoid activation function.\n")
     calibration_results = rlookc::simulateY(
       X = X, 
       knockoffs = knockoffs,
