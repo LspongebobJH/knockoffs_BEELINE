@@ -25,7 +25,8 @@ knockoffEmpiricalCorrection = function(w){
 }
 # For manual inspection of the process
 # arguments = list(
-#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-10/LOOK/ExpressionData.csv"
+#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-10/LOOK/ExpressionData.csv",
+#   calibrate = T
 # )
 
 standardize = function(inputExpr){
@@ -99,8 +100,9 @@ runCalibrationCheck = function(X, noiselevel = 1){
       knockoffs = knockoffs,
       plot_savepath = paste0(arguments$outFile, "_calibration.pdf"), 
       # Univariate sigmoidal
-      active_set_size = 1, 
-      FUN = function(x) 1/(1+exp(-x))    
+      active_set_size = 1,
+      FUN = function(x) 1/(1+exp(-10*x))
+      
       # Bivariate bool-ish
       # active_set_size = 2, 
       # FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
@@ -394,17 +396,17 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
       
       # For interactive use
-      data.frame(
-        production = y,
-        protein_regulator = X[,k-1],
-        protein_product = X[,k],
-        protein_regulator_knockoff = knockoffs[,k-1],
-        protein_product_knockoff = knockoffs[,k]
-      ) %>%
-        tidyr::pivot_longer(cols = !production) %>%
-        ggplot() +
-        geom_point(aes(x = value, y = production, colour = name, shape = name)) +
-        ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
+      # data.frame(
+      #   production = y,
+      #   protein_regulator = X[,k-1],
+      #   protein_product = X[,k],
+      #   protein_regulator_knockoff = knockoffs[,k-1],
+      #   protein_product_knockoff = knockoffs[,k]
+      # ) %>%
+      #   tidyr::pivot_longer(cols = !production) %>%
+      #   ggplot() +
+      #   geom_point(aes(x = value, y = production, colour = name, shape = name)) +
+      #   ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
         
 
     }  
