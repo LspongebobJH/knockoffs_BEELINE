@@ -49,7 +49,7 @@ stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
             nrow(inputPT)==ncol(inputExpr))
 # Separate different types of measurements
 inputProtein = inputExpr[grepl("^p_", rownames(inputExpr)),]
-inputRNA     = inputExpr[grepl("^x_", rownames(inputExpr)),]
+inputRNA     = inputExpr[grepl("^x_|^g", rownames(inputExpr)),]
 inputRNAvelocity     = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
 inputRNA = as.matrix(inputRNA) %>% standardize
 # Gene name handling:
@@ -74,9 +74,7 @@ if(nrow(inputRNAvelocity)>0){
   inputRNAvelocity = inputRNAvelocity[geneNames, ]
 } 
 rm(inputExpr)
-image(inputRNA)
-image(inputProtein)
-image(inputRNAvelocity)
+
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
 # inputExpr = sapply(seq(nrow(neighbors$nn.dist)),
