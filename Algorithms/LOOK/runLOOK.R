@@ -404,8 +404,8 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
     
       # subtract off decay rate; only production rate remains to be modeled
       y = y - concentration*decay_rate
-      # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
-      w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
+      w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
+      # w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
       
       # For interactive use
       # data.frame(
