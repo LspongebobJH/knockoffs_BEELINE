@@ -65,7 +65,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% log10 %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 } 
@@ -101,7 +101,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
       plot_savepath = paste0(arguments$outFile, "_calibration.pdf"), 
       # Univariate sigmoidal
       active_set_size = 1,
-      FUN = function(x) 1/(1+exp(-10*x))
+      FUN = function(x) 1/(1+exp(-10*(x-1.5)))
       
       # Bivariate bool-ish
       # active_set_size = 2, 
