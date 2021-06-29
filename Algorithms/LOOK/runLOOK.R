@@ -48,9 +48,9 @@ inputPT   = inputPT[order(inputPT[[1]]),]
 stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
             nrow(inputPT)==ncol(inputExpr))
 # Separate different types of measurements
-inputProtein = inputExpr[grepl("^p_", rownames(inputExpr)),]
-inputRNA     = inputExpr[grepl("^x_|^g", rownames(inputExpr)),]
-inputRNAvelocity     = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
+inputProtein     = inputExpr[grepl("^p_", rownames(inputExpr)),]
+inputRNA         = inputExpr[grepl("^x_|^g", rownames(inputExpr)),]
+inputRNAvelocity = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
 inputRNA = as.matrix(inputRNA) %>% standardize
 # Gene name handling:
 # Clean
@@ -64,7 +64,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% log10 %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 } 
@@ -93,12 +93,17 @@ runCalibrationCheck = function(X, noiselevel = 1){
                                                  mu = 0,
                                                  Sigma = cor(X), 
                                                  num_realizations = 100)
+    message("Checking calibration with a univariate sigmoid activation function.\n")
     calibration_results = rlookc::simulateY(
       X = X, 
       knockoffs = knockoffs,
       plot_savepath = paste0(arguments$outFile, "_calibration.pdf"), 
-      active_set_size = 2, 
-      FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
+      # Univariate sigmoidal
+      active_set_size = 1, 
+      FUN = function(x) 1/(1+exp(-x))    
+      # Bivariate bool-ish
+      # active_set_size = 2, 
+      # FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
     )
     saveRDS(calibration_results, paste0(arguments$outFile, "_calibration.Rda"))
     return(invisible(calibration_results))
@@ -108,7 +113,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "steady_state"#"rna_production_protein_predictor"
+arguments$method = "rna_production_protein_predictor" # "steady_state"
 {
   if( arguments$method == "steady_state" )
   {
@@ -359,7 +364,7 @@ arguments$method = "steady_state"#"rna_production_protein_predictor"
     )
     
     # Optional calibration check
-    # x = runCalibrationCheck(X, noiselevel = 1)
+    x = runCalibrationCheck(X, noiselevel = 1)
     
     # Do each gene separately
     q = w = list()
@@ -387,6 +392,21 @@ arguments$method = "steady_state"#"rna_production_protein_predictor"
       y = y - concentration*decay_rate
       # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
+      
+      # For interactive use
+      data.frame(
+        production = y,
+        protein_regulator = X[,k-1],
+        protein_product = X[,k],
+        protein_regulator_knockoff = knockoffs[,k-1],
+        protein_product_knockoff = knockoffs[,k]
+      ) %>%
+        tidyr::pivot_longer(cols = !production) %>%
+        ggplot() +
+        geom_point(aes(x = value, y = production, colour = name, shape = name)) +
+        ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
+        
+
     }  
     # Assemble results
     DF = list()
