@@ -105,8 +105,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
       knockoffs = knockoffs,
       plot_savepath = paste0(arguments$outFile, "_calibration.pdf"),
       # Heteroskedasticity Hunter
-      FUN = "adversarial",
-      kmeans_centers = 5
+      FUN = "diverse"
 
       # Univariate sigmoidal
       # active_set_size = 1,
