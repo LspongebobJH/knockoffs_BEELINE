@@ -413,18 +413,18 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
 
       # For interactive use
-    #   data.frame(
-    #     production = y,
-    #     protein_regulator = X[,k-1],
-    #     protein_product = X[,k],
-    #     protein_regulator_knockoff = knockoffs[,k-1],
-    #     protein_product_knockoff = knockoffs[,k]
-    #   ) %>%
-    #     tidyr::pivot_longer(cols = !production) %>%
-    #     ggplot() +
-    #     geom_point(aes(x = value, y = production, colour = name, shape = name)) +
-    #     ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
-    # }
+      # data.frame(
+      #   production = y,
+      #   protein_regulator = X[,k-1],
+      #   protein_product = X[,k],
+      #   protein_regulator_knockoff = knockoffs[,k-1],
+      #   protein_product_knockoff = knockoffs[,k]
+      # ) %>%
+      #   tidyr::pivot_longer(cols = !production) %>%
+      #   ggplot() +
+      #   geom_point(aes(x = value, y = production, colour = name, shape = name)) +
+      #   ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
+    }
 
     # w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
