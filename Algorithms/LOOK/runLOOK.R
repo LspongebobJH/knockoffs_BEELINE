@@ -381,7 +381,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
     )
 
     # Optional calibration check
-    calib = runCalibrationCheck(X, noiselevel = 1)
+    calib = runCalibrationCheck(X)
     plot(calib$calibration$targeted_fdrs, colMeans(calib$calibration$fdr))
     abline(a = 0, b = 1)
 
@@ -392,7 +392,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       # Infer the decay rate in a robust way (piecewise linear)
       concentration = inputRNA[k,]
       plot(concentration, y, pch = ".")
-      concentration_bins = cut(concentration, breaks = 5)
+      concentration_bins = cut(concentration, breaks = 10)
       decay_rate = list()
       for(bin in levels(concentration_bins)){
         idx = concentration_bins==bin
@@ -403,27 +403,27 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
       }
       nona = function(x) x[!is.na(x)]
       negative_only = function(x) x[x<0]
-      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% median
+      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% quantile(0.2)
       clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
       abline(a = 0, b = decay_rate, col = "red")
 
       # subtract off decay rate; only production rate remains to be modeled
       y = y - concentration*decay_rate
-      w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
-      # w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
+      # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
+      w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
 
       # For interactive use
-      # data.frame(
-      #   production = y,
-      #   protein_regulator = X[,k-1],
-      #   protein_product = X[,k],
-      #   protein_regulator_knockoff = knockoffs[,k-1],
-      #   protein_product_knockoff = knockoffs[,k]
-      # ) %>%
-      #   tidyr::pivot_longer(cols = !production) %>%
-      #   ggplot() +
-      #   geom_point(aes(x = value, y = production, colour = name, shape = name)) +
-      #   ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
+      data.frame(
+        production = y,
+        protein_regulator = X[,k-1],
+        protein_product = X[,k],
+        protein_regulator_knockoff = knockoffs[,k-1],
+        protein_product_knockoff = knockoffs[,k]
+      ) %>%
+        tidyr::pivot_longer(cols = !production) %>%
+        ggplot() +
+        geom_point(aes(x = value, y = production, colour = name, shape = name)) +
+        ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
 
 
     }
