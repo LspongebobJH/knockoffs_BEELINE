@@ -21,7 +21,7 @@ nonparametricMarginalScreen = function(X, knockoffs, y){
 
 # For manual inspection of the process
 # arguments = list(
-#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-10/LOOK/ExpressionData.csv",
+#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-1/LOOK/ExpressionData.csv",
 #   calibrate = T
 # )
 
@@ -96,25 +96,34 @@ knockoffEmpiricalCorrection = function(w){
 
 runCalibrationCheck = function(X, noiselevel = 1){
   if(arguments$calibrate){
-    knockoffs = rlookc::computeGaussianKnockoffs(X = X,
-                                                 mu = 0,
-                                                 Sigma = cor(X),
-                                                 num_realizations = 1000)
-    calibration_results = rlookc::simulateY(
-      X = X,
-      knockoffs = knockoffs,
-      plot_savepath = paste0(arguments$outFile, "_calibration.pdf"),
-      # Heteroskedasticity Hunter
-      FUN = "diverse"
-
-      # Univariate sigmoidal
-      # active_set_size = 1,
-      # FUN = function(x) 1/(1+exp(-10*(x-1.5)))
-
-      # Bivariate bool-ish
-      # active_set_size = 2,
-      # FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
+    X_k = rlookc::computeGaussianKnockoffs(X = X,
+                                           mu = 0,
+                                           Sigma = cor(X),
+                                           num_realizations = 1)
+    diverse_y = rlookc::chooseDiverseY(X)
+    calibration_results = rlookc::findWorstY(
+      X,
+      X_k,
+      y = diverse_y$y,
+      ground_truth = diverse_y$ground_truth
     )
+
+    # rlookc::simulateY(
+    #   X = X,
+    #   knockoffs = knockoffs,
+    #   plot_savepath = paste0(arguments$outFile, "_calibration.pdf"),
+    #   # Heteroskedasticity Hunter
+    #   FUN = "adversarial",
+    #   kmeans_centers =5
+    #
+    #   # Univariate sigmoidal
+    #   # active_set_size = 1,
+    #   # FUN = function(x) 1/(1+exp(-10*(x-1.5)))
+    #
+    #   # Bivariate bool-ish
+    #   # active_set_size = 2,
+    #   # FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
+    # )
     saveRDS(calibration_results, paste0(arguments$outFile, "_calibration.Rda"))
     return(invisible(calibration_results))
   }
@@ -390,22 +399,27 @@ arguments$method = "rna_production_protein_predictor" # "steady_state"
     for(k in seq_along(geneNames)){
       y = t(inputRNAvelocity)[,k]
       # Infer the decay rate in a robust way (piecewise linear)
-      concentration = inputRNA[k,]
-      plot(concentration, y, pch = ".")
-      concentration_bins = cut(concentration, breaks = 10)
-      decay_rate = list()
-      for(bin in levels(concentration_bins)){
-        idx = concentration_bins==bin
-        if(sum(idx)<10){next}
-        decay_rate[[bin]] = coef( quantreg::rq(y[idx] ~ concentration[idx] ) )
-        clip(min(concentration[idx]), max(concentration[idx]), y1 = -100, y2 = 100)
-        abline(decay_rate[[bin]][[1]], decay_rate[[bin]][[2]])
+      dir.create(file.path(dirname(arguments$outFile), "decay_estimation"), recursive = T, showWarnings = F)
+      pdf(file.path(dirname(arguments$outFile), "decay_estimation", paste0("g", k, ".pdf")))
+      {
+        concentration = inputRNA[k,]
+        plot(concentration, y, pch = ".")
+        concentration_bins = cut(concentration, breaks = 10)
+        decay_rate = list()
+        for(bin in levels(concentration_bins)){
+          idx = concentration_bins==bin
+          if(sum(idx)<10){next}
+          decay_rate[[bin]] = coef( quantreg::rq(y[idx] ~ concentration[idx] ) )
+          clip(min(concentration[idx]), max(concentration[idx]), y1 = -100, y2 = 100)
+          abline(decay_rate[[bin]][[1]], decay_rate[[bin]][[2]])
+        }
+        nona = function(x) x[!is.na(x)]
+        negative_only = function(x) x[x<0]
+        decay_rate %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% quantile(0.2)
+        clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
+        abline(a = 0, b = decay_rate, col = "red")
       }
-      nona = function(x) x[!is.na(x)]
-      negative_only = function(x) x[x<0]
-      decay_rate %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% quantile(0.2)
-      clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
-      abline(a = 0, b = decay_rate, col = "red")
+      dev.off()
 
       # subtract off decay rate; only production rate remains to be modeled
       y = y - concentration*decay_rate
