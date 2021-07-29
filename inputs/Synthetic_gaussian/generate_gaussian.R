@@ -27,7 +27,11 @@ for(toy in toy_networks){
   for(rep in 1:10){
     for(n_cell in c(100, 200, 500, 2000, 5000)){
       X = t(M) %*% matrix(rnorm(n_cell*n_genes, mean = 0, sd = 1), nrow = n_genes)
+      rownames(X) = paste0("g", 1:nrow(X))
+      # BEELINE violates DRY pretty flagrantly here and now it's my problem.
       write.csv(X, file.path(toy, paste(toy, n_cell, rep, sep = "-"), "ExpressionData.csv"))
+      write.csv(X, file.path(toy, paste(toy, n_cell, rep, sep = "-"), "PPCOR", "ExpressionData.csv"))
+      write.csv(X, file.path(toy, paste(toy, n_cell, rep, sep = "-"), "LOOK", "ExpressionData.csv"))
       # Visual check for correctness of precision matrix
       remove_diagonal_that_otherwise_ruins_colorscale = function(X){
         diag(X) = mean(X)

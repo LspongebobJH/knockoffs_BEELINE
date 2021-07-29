@@ -100,7 +100,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
                                            mu = 0,
                                            Sigma = cor(X),
                                            num_realizations = 1)
-    diverse_y = rlookc::chooseDiverseY(X)
+    diverse_y = rlookc::chooseDiverseY(X, n_quantiles = 20)
     calibration_results = rlookc::findWorstY(
       X,
       X_k,
@@ -132,7 +132,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor" # "steady_state"
+arguments$method =  "steady_state" # "rna_production_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
