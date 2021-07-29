@@ -25,6 +25,15 @@ nonparametricMarginalScreen = function(X, knockoffs, y){
 #   calibrate = T
 # )
 
+# Optional transformation to gaussian marginals
+makeMarginalsGaussian = function(X){
+  div_by_max = function(x) (x-0.5)/max(x)
+  for(i in seq(nrow(X))){
+    X[i,] = rank( X[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
+  }
+  X
+}
+
 standardize = function(inputExpr){
   for(i in seq(nrow(inputExpr))){
     inputExpr[i,] = inputExpr[i,] - mean(inputExpr[i,])
@@ -48,7 +57,7 @@ stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
 inputProtein     = inputExpr[grepl("^p_", rownames(inputExpr)),]
 inputRNA         = inputExpr[grepl("^x_|^g", rownames(inputExpr)),]
 inputRNAvelocity = inputExpr[grepl("^velocity_x_", rownames(inputExpr)),]
-inputRNA = as.matrix(inputRNA) %>% standardize
+inputRNA = as.matrix(inputRNA) %>% makeMarginalsGaussian %>% standardize
 # Gene name handling:
 # Clean
 geneNames_more_like_cleanNames = function(x){
@@ -61,7 +70,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% makeMarginalsGaussian %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 }
@@ -76,17 +85,6 @@ rm(inputExpr)
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
 # inputExpr = sapply(seq(nrow(neighbors$nn.dist)),
 #                    function(i) rowMeans(inputExpr[,c(i, neighbors$nn.index[i,])]) )
-
-# Optional transformation to gaussian marginals
-# makeMarginalsGaussian = function(X){
-#   div_by_max = function(x) x/max(x)
-#   for(i in seq(nrow(X))){
-#     X[i,] = rank( X[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
-#   }
-#   X
-# }
-# inputProtein %<>% makeMarginalsGaussian
-# inputRNA %<>% makeMarginalsGaussian
 
 # Apply "genomic control" if input options say so
 arguments$center_knockoff_stats = T
