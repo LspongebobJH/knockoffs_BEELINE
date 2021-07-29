@@ -78,10 +78,15 @@ rm(inputExpr)
 #                    function(i) rowMeans(inputExpr[,c(i, neighbors$nn.index[i,])]) )
 
 # Optional transformation to gaussian marginals
-# div_by_max = function(x) x/max(x)
-# for(i in seq(nrow(inputExpr))){
-#   inputExpr[i,] = rank( inputExpr[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
+# makeMarginalsGaussian = function(X){
+#   div_by_max = function(x) x/max(x)
+#   for(i in seq(nrow(X))){
+#     X[i,] = rank( X[i,] , ties.method = "random" ) %>% div_by_max %>% qnorm
+#   }
+#   X
 # }
+# inputProtein %<>% makeMarginalsGaussian
+# inputRNA %<>% makeMarginalsGaussian
 
 # Apply "genomic control" if input options say so
 arguments$center_knockoff_stats = T
@@ -132,7 +137,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method =  "steady_state" # "rna_production_protein_predictor"
+arguments$method = "rna_production_protein_predictor" # "steady_state" #
 {
   if( arguments$method == "steady_state" )
   {
@@ -444,7 +449,7 @@ arguments$method =  "steady_state" # "rna_production_protein_predictor"
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
-      keep = seq_along(geneNames) #[-k] allow autoregulation
+      keep = seq_along(geneNames)[-k] # disallow autoregulation
       DF[[k]] = data.frame(
         Gene1 = geneNames[ k],
         Gene2 = geneNames[keep],

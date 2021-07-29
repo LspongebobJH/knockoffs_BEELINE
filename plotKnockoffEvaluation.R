@@ -4,9 +4,9 @@ library(ggplot2)
 
 grabResults = function(pattern,
                        reader = read.csv,
-                        base_dir = "outputs/Synthetic_gaussian",
+                       base_dir = "outputs/Synthetic_with_protein_and_velocity",
                        # To plot an older result:
-                       # base_dir = "../knockoffs/beeline freezes/outputs 2021-06-30 1/Synthetic_with_protein_and_velocity",
+                       # base_dir = "../knockoffs/beeline freezes/outputs 2021-07-29 1/Synthetic_with_protein_and_velocity",
                        ...){
   x = list.files(base_dir,
                     pattern = paste0("(-|_)", pattern),
@@ -15,6 +15,23 @@ grabResults = function(pattern,
                     recursive = T)
   lapply(x, reader, ...) %>% setNames(x)
 }
+
+# Calibration checks based on BEELINE ground truth
+metric = "FDR"
+fdr = grabResults(pattern = metric)
+plot_data = fdr %>%
+  data.table::rbindlist() %>%
+  tidyr::pivot_longer(cols = X0:X9, values_to = "empirical_fdr", names_to = "targeted_fdr") %>%
+  dplyr::mutate(targeted_fdr = gsub("^X", "", targeted_fdr) %>% as.numeric %>% divide_by(10)) %>%
+  tidyr::separate(X, into = c(NA, "network", "cellcount", "replicate"))
+ggplot(plot_data) +
+  geom_point(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, shape = cellcount)) +
+  geom_smooth(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, group = cellcount), se = F) +
+  facet_wrap( ~ network) +
+  ylab(metric) +
+  ggtitle("Calibration on BEELINE simple network simulations") +
+  geom_abline(aes(slope = 1, intercept = 0))
+
 
 # BEELINE metrics
 metric = "aupr"
@@ -35,21 +52,6 @@ ggplot(aupr) +
   ylab(metric) +
   ggtitle(paste0(metric, " on BEELINE simple simulations"))
 
-# Calibration checks based on BEELINE ground truth
-metric = "undirectedFDR"
-fdr = grabResults(pattern = metric)
-plot_data = fdr %>%
-  data.table::rbindlist() %>%
-  tidyr::pivot_longer(cols = X0:X9, values_to = "empirical_fdr", names_to = "targeted_fdr") %>%
-  dplyr::mutate(targeted_fdr = gsub("^X", "", targeted_fdr) %>% as.numeric %>% divide_by(10)) %>%
-  tidyr::separate(X, into = c(NA, "network", "cellcount", "replicate"))
-ggplot(plot_data) +
-  geom_point(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, shape = cellcount)) +
-  geom_smooth(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, group = cellcount), se = F) +
-  facet_wrap( ~ network) +
-  ylab(metric) +
-  ggtitle("Calibration on BEELINE simple network simulations") +
-  geom_abline(aes(slope = 1, intercept = 0))
 
 # Calibration checks based on simulated Y
 calibration_checks = grabResults(pattern = "calibration.Rda",
