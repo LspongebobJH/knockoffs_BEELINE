@@ -17,6 +17,7 @@ RUN R -e "install.packages(c('optparse'))"
 RUN R -e "install.packages(c('ggplot2'))"
 RUN R -e "install.packages(c('quantreg'))"
 RUN R -e "install.packages(c('tidyverse'))"
+RUN R -e "install.packages(c('mclust'))"
 
 # frequently altered
 COPY rlookc_0.1.0.tar.gz /
