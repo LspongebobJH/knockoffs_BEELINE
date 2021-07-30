@@ -69,7 +69,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% makeMarginalsGaussian %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 }
@@ -134,7 +134,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
+arguments$method = "rna_production_protein_predictor" # "steady_state" #
 {
   if( arguments$method == "steady_state" )
   {
