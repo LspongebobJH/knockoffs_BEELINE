@@ -49,7 +49,7 @@ inputPT =
   read.table(sep = ",", header = 1, row.names = 1)
 inputExpr <- read.table(arguments$expressionFile, sep=",", header = 1, row.names = 1)
 inputExpr = inputExpr[,order(inputPT[[1]])]
-inputPT   = inputPT[order(inputPT[[1]]),]
+inputPT   = inputPT[order(inputPT[[1]]),1]
 stopifnot("Pseudotime and expression don't have the same number of cells.\n"=
             nrow(inputPT)==ncol(inputExpr))
 # Separate different types of measurements
@@ -69,7 +69,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% makeMarginalsGaussian %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 }
@@ -134,7 +134,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor" # "steady_state" #
+arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
 {
   if( arguments$method == "steady_state" )
   {
@@ -470,31 +470,37 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
     sigmas = lapply( 1:mixtureModel$G, function(g) mixtureModel$parameters[["variance"]][["sigma"]][,,g] )
     crap_knockoffs = rlookc::computeGaussianKnockoffs(X, output_type = "knockoffs")
     knockoffs = rlookc::computeGaussianMixtureKnockoffs(X, mus, sigmas, posterior_probs = mixtureModel$z, output_type = "knockoffs")
-    # Plotting code for ad hoc interactive use: mixture model fit
-    {
+    # Plotting code: assess mixture model fit
+    try(silent = T, {
       exprByCluster = inputProtein %>%
         t %>%
         as.data.frame() %>%
-        cbind( cluster = apply( mixtureModel$z, 1, which.max ) %>% as.character ) %>%
+        cbind( cluster = apply( mixtureModel$z, 1, which.max ) ) %>%
         cbind( time = inputPT ) %>%
-        tidyr::pivot_longer(g1:g18, names_to = "gene", values_to = "expression")
+        tidyr::pivot_longer(seq(ncol(X)), names_to = "gene", values_to = "expression")
       ggplot(exprByCluster) +
         geom_point(aes(x = time, y = expression, color = cluster)) +
         facet_wrap(~gene) +
-        ggtitle("Gaussian mixture model of a Linear Long example dataset")
+        ggtitle("Gaussian mixture model fit")
+        ggsave(file.path(dirname(arguments$outFile), "mixture_model_fit.pdf"), width = 8, height = 8)
 
-      g1 = "g1"
-      g2 = "g18"
-      inputProtein %>%
-        t %>%
-        as.data.frame() %>%
-        cbind( cluster = apply( mixtureModel$z, 1, which.max ) %>% paste0("cluster", .) ) %>%
-        cbind( time = inputPT ) %>%
-        ggplot() +
-        geom_point(aes_string(x = g1, y = g2, color = "time")) +
-        facet_wrap(~cluster) +
-        ggtitle(paste("Genes", g1, "and", g2))
-    }
+      g1 = inputProtein %>% rownames         %>% extract2(1)
+      other_genes =  inputProtein %>% rownames %>% extract(c(2, floor( nrow(inputProtein)/2 ), nrow(inputProtein)))
+      for( g2 in other_genes){
+        title = paste("Genes", g1, "and", g2)
+        inputProtein %>%
+          t %>%
+          as.data.frame() %>%
+          cbind( cluster = apply( mixtureModel$z, 1, which.max ) %>% paste0("cluster", .) ) %>%
+          cbind( time = inputPT ) %>%
+          ggplot() +
+          geom_point(aes_string(x = g1, y = g2, color = "time")) +
+          facet_wrap(~cluster) +
+          ggtitle(title)
+          ggsave(file.path(dirname(arguments$outFile), paste0("mixture_model_fit_", title, ".pdf")),
+                 width = 8, height = 8)
+      }
+    })
 
     # Optional calibration check
     calib = runCalibrationCheck(X)
@@ -507,7 +513,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
       y = t(inputRNAvelocity)[,k]
       # Infer the decay rate in a robust way (piecewise linear)
       dir.create(file.path(dirname(arguments$outFile), "decay_estimation"), recursive = T, showWarnings = F)
-      pdf(file.path(dirname(arguments$outFile), "decay_estimation", paste0("g", k, ".pdf")))
+      pdf(       file.path(dirname(arguments$outFile), "decay_estimation", paste0("g", k, ".pdf")))
       {
         concentration = inputRNA[k,]
         plot(concentration, y, pch = ".")
@@ -533,8 +539,11 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
       # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
 
-      # Plotting code for ad hoc interactive use: knockoffs vs X
-      {
+      # Plotting code for ad hoc use: knockoffs vs X
+      # This will fail often for boring reasons but it also produces a lot of useful plots.
+      goodness_of_fit_plots = file.path(dirname(arguments$outFile), "knockoff_goodness_of_fit_plots")
+      dir.create(goodness_of_fit_plots, recursive = T, showWarnings = F)
+      try(silent = F, {
         plot_data = data.frame(
           production = y,
           protein_regulator = X[,k-1],
@@ -544,24 +553,31 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
           protein_regulator_gaussian_knockoff = crap_knockoffs[,k-1],
           protein_product_gaussian_knockoff   = crap_knockoffs[,k],
           time = inputPT
-        ) %>%
+        )
+        plot_data %<>%
           tidyr::pivot_longer(cols = protein_regulator:protein_product_gaussian_knockoff,
                               names_to = "feature",
                               values_to = "expression")
         # A null variable vs Y
         ggplot(plot_data %>% subset(!grepl("regulator", feature))) +
           geom_point(aes(x = expression, y = production, colour = feature, shape = feature)) +
-          ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
+          ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"),
+                  "Regulator of gene k is assumed to be k-1.\nThis works only for linear long (and even then, not for gene 1.)\nSorry.")
+          ggsave(goodness_of_fit_plots %>% file.path(paste0("association_", k, ".pdf")),
+                 width = 6, height = 4)
         # A variable over time
         ggplot(plot_data %>% subset(!grepl("product", feature))) +
           geom_point(aes(x = time, y = expression, colour = feature, shape = feature)) +
           geom_smooth(aes(x = time, y = expression, colour = feature, shape = feature), se = F) +
-          ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate")) +
+          ggtitle(paste0("Protein ", k, " expression and knockoffs over time")) +
           scale_color_manual(values = c("protein_regulator" ="black",
                                         "protein_regulator_gaussian_knockoff" ="red",
-                                        "protein_regulator_mixture_knockoff" ="blue"))
+                                        "protein_regulator_mixture_knockoff" = "blue"))
+          ggsave(goodness_of_fit_plots %>% file.path(paste0("timeseries_", k, ".pdf")),
+                 width = 6, height = 4)
 
-      }
+
+      } )
     }
 
     # w %<>% lapply(knockoffEmpiricalCorrection)
