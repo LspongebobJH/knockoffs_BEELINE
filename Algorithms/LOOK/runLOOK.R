@@ -451,7 +451,7 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
         Gene1 = geneNames[ k],
         Gene2 = geneNames[keep],
         knockoff_stat = w[[k]][keep],
-        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 1)
+        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 0)
       )
     }
     DF = data.table::rbindlist(DF)
@@ -543,7 +543,7 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       # This will fail often for boring reasons but it also produces a lot of useful plots.
       goodness_of_fit_plots = file.path(dirname(arguments$outFile), "knockoff_goodness_of_fit_plots")
       dir.create(goodness_of_fit_plots, recursive = T, showWarnings = F)
-      try(silent = F, {
+      try(silent = T, {
         plot_data = data.frame(
           production = y,
           protein_regulator = X[,k-1],
@@ -580,7 +580,7 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       } )
     }
 
-    # w %<>% lapply(knockoffEmpiricalCorrection)
+    w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
@@ -589,7 +589,7 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
         Gene1 = geneNames[ k],
         Gene2 = geneNames[keep],
         knockoff_stat = w[[k]][keep],
-        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 1)
+        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 0)
       )
     }
     DF = data.table::rbindlist(DF)
