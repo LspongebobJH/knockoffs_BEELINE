@@ -442,7 +442,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
       #   ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
     }
 
-    w %<>% lapply(knockoffEmpiricalCorrection)
+    # w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
