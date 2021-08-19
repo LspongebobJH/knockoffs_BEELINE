@@ -152,8 +152,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     DF = list()
     for(i in seq(nrow(inputRNA))){
       DF[[i]] = data.frame(
-        Gene1 = geneNames[ i],
-        Gene2 = geneNames[-i],
+        Gene1 = geneNames[-i],
+        Gene2 = geneNames[ i],
         knockoff_stat = knockoffResults[[i]],
         q_value = rlookc::knockoffQvals(knockoffResults[[i]], offset = 0)
       )
@@ -221,8 +221,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputExpr))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
@@ -285,8 +285,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputExpr))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
@@ -332,8 +332,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputExpr))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
@@ -371,8 +371,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputExpr))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
@@ -448,8 +448,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq_along(geneNames)){
       keep = seq_along(geneNames)[-k] # disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[keep],
+        Gene1 = geneNames[ keep],
+        Gene2 = geneNames[k],
         knockoff_stat = w[[k]][keep],
         q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 0)
       )
@@ -586,8 +586,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq_along(geneNames)){
       keep = seq_along(geneNames)[-k] # disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[keep],
+        Gene1 = geneNames[keep],
+        Gene2 = geneNames[ k],
         knockoff_stat = w[[k]][keep]
       )
     }
@@ -626,8 +626,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputRNA))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
@@ -657,8 +657,8 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
     for(k in seq(nrow(inputRNA))){
       w = knockoffResults[[k]][-k] # Disallow autoregulation
       DF[[k]] = data.frame(
-        Gene1 = geneNames[ k],
-        Gene2 = geneNames[-k],
+        Gene1 = geneNames[-k],
+        Gene2 = geneNames[ k],
         knockoff_stat = w,
         q_value = rlookc::knockoffQvals(w, offset = 0)
       )
