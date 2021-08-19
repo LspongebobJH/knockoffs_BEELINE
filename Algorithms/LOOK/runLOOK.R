@@ -588,11 +588,11 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       DF[[k]] = data.frame(
         Gene1 = geneNames[keep],
         Gene2 = geneNames[ k],
-        knockoff_stat = w[[k]][keep]
+        knockoff_stat = w[[k]][keep],
+        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 0)
       )
     }
     DF = data.table::rbindlist(DF)
-    DF[["q_value"]] = rlookc::knockoffQvals(DF[["knockoff_stat"]], offset = 0)
   }
   else if(arguments$method == "rna_velocity_protein_predictor" )
   {
