@@ -134,7 +134,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor" # "steady_state" #
+arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
 {
   if( arguments$method == "steady_state" )
   {
@@ -580,7 +580,7 @@ arguments$method = "rna_production_protein_predictor" # "steady_state" #
       } )
     }
 
-    w %<>% lapply(knockoffEmpiricalCorrection)
+    # w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
