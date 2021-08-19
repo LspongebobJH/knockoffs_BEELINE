@@ -134,7 +134,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
+arguments$method = "rna_production_protein_predictor" # "steady_state" #
 {
   if( arguments$method == "steady_state" )
   {
@@ -442,7 +442,7 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       #   ggtitle(paste0("Candidate regulators and their knockoffs versus gene", k, " production rate"))
     }
 
-    # w %<>% lapply(knockoffEmpiricalCorrection)
+    w %<>% lapply(knockoffEmpiricalCorrection)
     # Assemble results
     DF = list()
     for(k in seq_along(geneNames)){
@@ -450,11 +450,12 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       DF[[k]] = data.frame(
         Gene1 = geneNames[ keep],
         Gene2 = geneNames[k],
-        knockoff_stat = w[[k]][keep],
-        q_value = rlookc::knockoffQvals(w[[k]][keep], offset = 0)
+        knockoff_stat = w[[k]][keep]
       )
     }
     DF = data.table::rbindlist(DF)
+    DF[["q_value"]] = rlookc::knockoffQvals(DF[["knockoff_stat"]], offset = 0)
+
   }
   else if(arguments$method == "rna_production_protein_predictor_mixture" )
   {
@@ -536,7 +537,6 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
 
       # subtract off decay rate; only production rate remains to be modeled
       y = y - concentration*decay_rate
-      # w[[k]] = nonparametricMarginalScreen(X, knockoffs, y)
       w[[k]] = knockoff::stat.glmnet_lambdasmax(X, knockoffs, y)
 
       # Plotting code for ad hoc use: knockoffs vs X
