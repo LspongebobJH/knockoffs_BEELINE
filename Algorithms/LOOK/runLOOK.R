@@ -134,7 +134,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
+arguments$method =  "steady_state" # "rna_production_protein_predictor_mixture" #
 {
   if( arguments$method == "steady_state" )
   {
@@ -154,11 +154,11 @@ arguments$method = "rna_production_protein_predictor_mixture" # "steady_state" #
       DF[[i]] = data.frame(
         Gene1 = geneNames[-i],
         Gene2 = geneNames[ i],
-        knockoff_stat = knockoffResults[[i]],
-        q_value = rlookc::knockoffQvals(knockoffResults[[i]], offset = 0)
+        knockoff_stat = knockoffResults[[i]]
       )
     }
     DF = data.table::rbindlist(DF)
+    DF[["q_value"]] = rlookc::knockoffQvals(DF[["knockoff_stat"]], offset = 0)
   }
   else if(arguments$method == "rna_production_protein_predictor" )
   {
