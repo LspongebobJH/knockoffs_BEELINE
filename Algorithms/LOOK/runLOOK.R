@@ -69,7 +69,7 @@ geneNames %<>% gtools::mixedsort()
 inputRNA = inputRNA[geneNames, ]
 # Clean and sort other types of measurements
 if(nrow(inputProtein)>0){
-  inputProtein = as.matrix(inputProtein) %>% sqrt %>% standardize
+  inputProtein = as.matrix(inputProtein) %>% makeMarginalsGaussian %>% standardize
   rownames(inputProtein) %<>% geneNames_more_like_cleanNames
   inputProtein = inputProtein[geneNames, ]
 }
@@ -79,6 +79,7 @@ if(nrow(inputRNAvelocity)>0){
   inputRNAvelocity = inputRNAvelocity[geneNames, ]
 }
 rm(inputExpr)
+
 
 # Optional smoothing
 # neighbors = FNN::get.knn(t(inputExpr), k = 20)
@@ -110,22 +111,6 @@ runCalibrationCheck = function(X, noiselevel = 1){
       ground_truth = diverse_y$ground_truth
     )
 
-    # rlookc::simulateY(
-    #   X = X,
-    #   knockoffs = knockoffs,
-    #   plot_savepath = paste0(arguments$outFile, "_calibration.pdf"),
-    #   # Heteroskedasticity Hunter
-    #   FUN = "adversarial",
-    #   kmeans_centers =5
-    #
-    #   # Univariate sigmoidal
-    #   # active_set_size = 1,
-    #   # FUN = function(x) 1/(1+exp(-10*(x-1.5)))
-    #
-    #   # Bivariate bool-ish
-    #   # active_set_size = 2,
-    #   # FUN = function(x) all(x>0) + rbinom(n = 1, size = noiselevel, prob = 0.5)
-    # )
     saveRDS(calibration_results, paste0(arguments$outFile, "_calibration.Rda"))
     return(invisible(calibration_results))
   }
@@ -134,7 +119,7 @@ runCalibrationCheck = function(X, noiselevel = 1){
 
 # Core functionality: GRN inference via knockoff-based tests
 # of carefully constructed null hypotheses
-arguments$method =  "rna_production_rna_predictor_mixture"
+arguments$method =  "rna_production_protein_predictor"
 {
   if( arguments$method == "steady_state" )
   {
@@ -183,7 +168,7 @@ arguments$method =  "rna_production_rna_predictor_mixture"
       y = t(inputRNAvelocity)[,k]
       # Infer the decay rate in a robust way (piecewise linear)
       dir.create(file.path(dirname(arguments$outFile), "decay_estimation"), recursive = T, showWarnings = F)
-      pdf(file.path(dirname(arguments$outFile), "decay_estimation", paste0("g", k, ".pdf")))
+      pdf(       file.path(dirname(arguments$outFile), "decay_estimation", paste0("g", k, ".pdf")))
       {
         concentration = inputRNA[k,]
         plot(concentration, y, pch = ".")
@@ -349,7 +334,7 @@ arguments$method =  "rna_production_rna_predictor_mixture"
         # A variable over time
         ggplot(plot_data %>% subset(!grepl("product", feature))) +
           geom_point(aes(x = time, y = expression, colour = feature, shape = feature)) +
-          geom_smooth(aes(x = time, y = expression, colour = feature, shape = feature), se = F) +
+          geom_smooth(aes(x = time, y = expression, colour = feature), method = "loess", formula = y ~ x, se = F) +
           ggtitle(paste0("Protein ", k, " expression and knockoffs over time")) +
           scale_color_manual(values = c("protein_regulator" ="black",
                                         "protein_regulator_gaussian_knockoff" ="red",
@@ -484,7 +469,7 @@ arguments$method =  "rna_production_rna_predictor_mixture"
         # A variable over time
         ggplot(plot_data %>% subset(!grepl("product", feature))) +
           geom_point(aes(x = time, y = expression, colour = feature, shape = feature)) +
-          geom_smooth(aes(x = time, y = expression, colour = feature, shape = feature), se = F) +
+          geom_smooth(aes(x = time, y = expression, colour = feature), method = "loess", formula = y ~ x, se = F) +
           ggtitle(paste0("Protein ", k, " expression and knockoffs over time")) +
           scale_color_manual(values = c("regulator" ="black",
                                         "regulator_gaussian_knockoff" ="red",
