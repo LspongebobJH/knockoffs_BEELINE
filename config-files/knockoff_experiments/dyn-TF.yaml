@@ -6,169 +6,69 @@ input_settings:
     input_dir : "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "Simulated/mCAD"
+    dataset_dir: "Synthetic_with_protein_and_velocity/dyn-TF"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
     #       messages written during execution
     #
-    #   ex_filename: scRNA-Seqexpression file name
-    #
-    #   pt_filename: a file containing pseudotime ordering
-    #
-    datasets:
-          
-        - name: "mCAD-2000-10"
+    #   exprData: scRNA-Seqexpression file name
+    #   cellData: a file containing pseudotime ordering
+    #   trueEdges: a file contaning reference network for evaulation
+    datasets:          
+        - name: "dyn-TF-500-1"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-1"
+        - name: "dyn-TF-500-2"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-2"
+        - name: "dyn-TF-500-3"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-3"
+        - name: "dyn-TF-500-4"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-4"
+        - name: "dyn-TF-500-5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-5"
+        - name: "dyn-TF-500-6"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-6"
+        - name: "dyn-TF-500-7"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-7"
+        - name: "dyn-TF-500-8"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "mCAD-2000-8"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-9"
+        - name: "dyn-TF-500-9"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
 
-        - name: "mCAD-2000-10-70"
+        - name: "dyn-TF-500-10"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-1-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-                 
-        - name: "mCAD-2000-2-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-         
-        - name: "mCAD-2000-3-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-4-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-5-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-6-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-7-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-8-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-          
-        - name: "mCAD-2000-9-70"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-10-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-1-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-                 
-        - name: "mCAD-2000-2-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-         
-        - name: "mCAD-2000-3-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-4-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-5-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-6-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-7-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-2000-8-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
-          
-        - name: "mCAD-2000-9-50"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
+
+
+
+
     # Denotes a list of algorithms to run. Each has the following parameters:
     #   name: Name of the algorithm. Must be recognized by the pipeline, see
     #       code for acceptable values
@@ -187,7 +87,7 @@ input_settings:
     #   params: any additional, algorithm-specific parameters
     #       should be specified in the params map for a given algorithm
     #
-      algorithms:
+    algorithms:
 
               
         - name: "PIDC"
@@ -221,6 +121,44 @@ input_settings:
         - name: "LOOK"
           params: 
               should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["easy"]
               
                
         - name: "SCODE"
@@ -298,4 +236,4 @@ output_settings:
 
     # Base output directory
     output_dir: "outputs"
-    output_prefix: "mCAD"
+    output_prefix: "dyn-TF"

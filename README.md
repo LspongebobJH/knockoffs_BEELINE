@@ -1,3 +1,10 @@
+---
+
+Modified by Eric Kernfeld on Nov 19, 2021 to test calibration of FDR control using model-X knockoffs. Conda and Docker setup is the same as described below. After that, use `test_knockoffs.sh`.
+
+---
+
+
 # :honeybee: BEELINE: Benchmarking gEnE reguLatory network Inference from siNgle-cEll transcriptomic data :honeybee:
 ![Overview of BEELINE](docs/figs/overview-graphic.png )
 
@@ -13,7 +20,7 @@ Quick setup:
 We provided an example dataset under inputs/example/GSD/ and a corresponding configuration file necessary for running GRN inference using 12 methods described in BEELINE. 
 
 - To compute proposed reconstructions on the example dataset, run `python BLRunner.py --config config-files/config.yaml`. Running this script for the first time can be slow as it involves downloading the contianers from Docker hub.
-- To compute areas under the ROC and PR curves for the proposed reconstructions, run `python BLEvaluator.py --config config-files/config.yaml --auc`. To display the complete list of evalutation options, run `python BLEvaluator.py --help`.
+- To compute areas under the ROC and PR curves for the proposed reconstructions, run `python BLEvaluator.py --config config-files/config.yaml --auc`. To display the complete list of evaluation options, run `python BLEvaluator.py --help`.
 
 If you use BEELINE in your research, please cite:
 

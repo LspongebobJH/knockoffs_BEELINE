@@ -116,11 +116,48 @@ input_settings:
               # Used in parsing output
               pVal: [0.01]
               
+              
         - name: "LOOK"
           params: 
               should_run: [True]
               calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["rna_only"]
               
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["easy"]
                
         - name: "SCODE"
           params:

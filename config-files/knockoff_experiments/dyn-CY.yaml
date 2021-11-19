@@ -6,7 +6,7 @@ input_settings:
     input_dir : "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "Synthetic_with_protein/dyn-LL"
+    dataset_dir: "Synthetic_with_protein_and_velocity/dyn-CY"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -15,53 +15,53 @@ input_settings:
     #   exprData: scRNA-Seqexpression file name
     #   cellData: a file containing pseudotime ordering
     #   trueEdges: a file contaning reference network for evaulation
-    datasets:          
-        - name: "dyn-LL-500-1"
+    datasets:
+        - name: "dyn-CY-500-1"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-2"
+        - name: "dyn-CY-500-2"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-3"
+        - name: "dyn-CY-500-3"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-4"
+        - name: "dyn-CY-500-4"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-5"
+        - name: "dyn-CY-500-5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-6"
+        - name: "dyn-CY-500-6"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-7"
+        - name: "dyn-CY-500-7"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-8"
+        - name: "dyn-CY-500-8"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
-        - name: "dyn-LL-500-9"
+        - name: "dyn-CY-500-9"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
 
-        - name: "dyn-LL-500-10"
+        - name: "dyn-CY-500-10"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
@@ -85,6 +85,7 @@ input_settings:
     #       should be specified in the params map for a given algorithm
     #
     algorithms:
+
               
         - name: "PIDC"
           params: 
@@ -114,11 +115,48 @@ input_settings:
               # Used in parsing output
               pVal: [0.01]
               
+              
         - name: "LOOK"
           params: 
               should_run: [True]
               calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["rna_only"]
               
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["naive"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["gaussian"]
+              data_mode: ["easy"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["rna_only"]
+              
+        - name: "LOOK"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              knockoff_type: ["mixture"]
+              data_mode: ["easy"]
                
         - name: "SCODE"
           params:
@@ -189,10 +227,9 @@ input_settings:
               ignorePT: [True]
 
 
-
 # Output Settings: initialize base output folder names
 output_settings:
 
     # Base output directory
-    output_prefix: "dyn-LL"
     output_dir: "outputs"
+    output_prefix: "dyn-CY"
