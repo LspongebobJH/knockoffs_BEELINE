@@ -10,4 +10,4 @@ The main changes we made were:
 - benchmark FDR and undirected FDR in addition to AUPR et cetera
 
 To run our experiments, use `test_knockoffs.sh`. For more info about the project, see https://github.com/ekernf01/knockoffs_paper . 
-For more info about BEELINE, see the [original]((https://github.com/Murali-group/Beeline/).
+For more info about BEELINE, see the [original](https://github.com/Murali-group/Beeline/).
