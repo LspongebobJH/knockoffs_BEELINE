@@ -27,7 +27,8 @@ def run(RunnerObj):
                     "/PIDC/ExpressionData.csv"
     
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/PIDC/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     outPath = 'data/'+ str(outDir) + 'outFile.txt'
@@ -43,7 +44,8 @@ def parseOutput(RunnerObj):
     Function to parse outputs from SCODE.
     '''
     # Quit if output directory does not exist
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/PIDC/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     if not Path(outDir+'outFile.txt').exists():
         print(outDir+'outFile.txt'+'does not exist, skipping...')
         return

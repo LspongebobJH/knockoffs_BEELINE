@@ -40,7 +40,7 @@ def run(RunnerObj):
     
 
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SINGE/"
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
 
     # if the parameters aren't specified, then use default parameters
@@ -123,7 +123,8 @@ def parseOutput(RunnerObj):
     '''
     Function to parse outputs from SINGE.
     '''
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SINGE/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
                              header = 0, index_col = 0)
 

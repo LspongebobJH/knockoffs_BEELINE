@@ -16,9 +16,7 @@ def generateInputs(RunnerObj):
     if not RunnerObj.inputDir.joinpath("LOOK/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)
-        
         newExpressionData = ExpressionData.copy()
-        
         # Write .csv file
         newExpressionData.to_csv(RunnerObj.inputDir.joinpath("LOOK/ExpressionData.csv"),
                              sep = ',', header  = True, index = True)
@@ -30,17 +28,21 @@ def run(RunnerObj):
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/LOOK/ExpressionData.csv"
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/LOOK/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)    
     outPath = "data/" +  str(outDir) + 'outFile.txt'
     # options
     calibrate = str(RunnerObj.params['calibrate'])
-    
+    data_mode = str(RunnerObj.params['data_mode'])
+    knockoff_type = str(RunnerObj.params['knockoff_type'])
     cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ look:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
     'Rscript runLOOK.R',
     '-e', inputPath, 
     '-o', outPath,
     '-c', calibrate, 
+    '-d', data_mode, 
+    '-k', knockoff_type, 
     '\"'])
     print(cmdToRun)
     os.system(cmdToRun)
@@ -52,7 +54,8 @@ def parseOutput(RunnerObj):
     Function to parse outputs from LOOK.
     '''
     # Quit if output directory does not exist
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/LOOK/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     if not Path(outDir+'outFile.txt').exists():
         print(outDir+'outFile.txt'+'does not exist, skipping...')
         return

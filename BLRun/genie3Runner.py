@@ -33,7 +33,8 @@ def run(RunnerObj):
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/GENIE3/ExpressionData.csv"
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GENIE3/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     outPath = "data/" +  str(outDir) + 'outFile.txt'
@@ -53,7 +54,8 @@ def parseOutput(RunnerObj):
     :param RunnerObj: An instance of the :class:`BLRun`
     '''
     # Quit if output directory does not exist
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GENIE3/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
 
         
     # Read output

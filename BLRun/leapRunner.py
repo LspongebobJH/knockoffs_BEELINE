@@ -49,7 +49,8 @@ def run(RunnerObj):
     maxLag = str(RunnerObj.params['maxLag'])
     
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/LEAP/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
@@ -74,7 +75,8 @@ def parseOutput(RunnerObj):
     '''
     Function to parse outputs from LEAP.
     '''
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/LEAP/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
 
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
                              header = 0, index_col = 0)

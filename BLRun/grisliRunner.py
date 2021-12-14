@@ -47,7 +47,8 @@ def run(RunnerObj):
     alphaMin = str(RunnerObj.params['alphaMin'])
     
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GRISLI/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
@@ -72,7 +73,8 @@ def parseOutput(RunnerObj):
     Function to parse outputs from GRISLI.
     '''
     
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GRISLI/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
 
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
                              header = 0, index_col = 0)

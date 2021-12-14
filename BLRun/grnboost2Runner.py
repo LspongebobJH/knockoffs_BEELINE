@@ -28,7 +28,8 @@ def run(RunnerObj):
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/GRNBOOST2/ExpressionData.csv"
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GRNBOOST2/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
 
     
@@ -46,7 +47,8 @@ def parseOutput(RunnerObj):
     Function to parse outputs from GRNBOOST2.
     '''
     # Quit if output directory does not exist
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GRNBOOST2/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     
     if not Path(outDir+'outFile.txt').exists():
         print(outDir+'outFile.txt'+'does not exist, skipping...')

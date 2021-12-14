@@ -83,12 +83,13 @@ class Runner(object):
         self.cellData = params['cellData']
         
     def generateInputs(self):
-        InputMapper[self.name](self)
+        # if no underscore is present, this will act like usual
+        InputMapper[self.name.split('_')[0]](self) 
         
         
     def run(self):
-        AlgorithmMapper[self.name](self)
+        AlgorithmMapper[self.name.split('_')[0]](self)
 
 
     def parseOutput(self):
-        OutputParser[self.name](self)
+        OutputParser[self.name.split('_')[0]](self)

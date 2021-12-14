@@ -48,7 +48,8 @@ def run(RunnerObj):
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                         "/SINCERITIES/"
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SINCERITIES/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
@@ -72,7 +73,8 @@ def parseOutput(RunnerObj):
 
     :param RunnerObj: An instance of the :class:`BLRun`
     '''
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SINCERITIES/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
 
     PTData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.cellData),
                              header = 0, index_col = 0)

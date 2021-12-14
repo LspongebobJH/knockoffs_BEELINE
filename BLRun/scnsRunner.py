@@ -92,7 +92,8 @@ def run(RunnerObj):
                     
     
     # make output dirs if they do not exist:
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SCNS/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     os.makedirs(outDir, exist_ok = True)
     
     outPath = "data/" +  str(outDir)
@@ -112,7 +113,8 @@ def parseOutput(RunnerObj):
     '''
     # Get list of input genes
     ExprDF = pd.read_csv(RunnerObj.inputDir.joinpath("SCNS/ExpressionData.csv"), index_col = 0, header = 0)
-    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/SCNS/"
+
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"
     geneList = list(ExprDF.columns)
     
     # Initialize ranked egdes file 
