@@ -9,5 +9,4 @@ The main changes we made were:
 - add datasets with protein concentration and RNA production rate revealed
 - benchmark FDR and undirected FDR in addition to AUPR et cetera
 
-To run our experiments, use `test_knockoffs.sh`. For more info about the project, see https://github.com/ekernf01/knockoffs_paper . 
-For more info about BEELINE, see the [original](https://github.com/Murali-group/Beeline/).
+To run our experiments, set up the BEELINE conda environment as specified by the BEELINE creators and use `test_knockoffs.sh`. For more info about the project, see https://github.com/ekernf01/knockoffs_paper . For more info about BEELINE, see the [original](https://github.com/Murali-group/Beeline/).
