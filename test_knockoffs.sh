@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/bash
 
 # Run experiments testing model-X knockoffs for inference of the BEELINE toy networks.
 conda activate BEELINE

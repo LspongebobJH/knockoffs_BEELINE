@@ -108,7 +108,7 @@ getProductionRate = function(inputRNAvelocity, inputRNA){
       }
       nona = function(x) x[!is.na(x)]
       negative_only = function(x) x[x<0]
-      decay_rate_constant %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% quantile(0.2)
+      decay_rate_constant %<>% sapply(extract2, "concentration[idx]") %>% nona %>% negative_only %>% median
       clip(min(concentration), max(concentration[idx]), y1 = -100, y2 = 100)
       abline(a = 0, b = decay_rate_constant, col = "red")
     }
