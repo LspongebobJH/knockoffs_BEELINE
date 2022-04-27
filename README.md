@@ -1,6 +1,6 @@
 ## BEELINE benchmarking of Model-X knockoffs
 
-We mmade mminimal mmodifications to BEELINE in order to benchmark various model-X knockoffs.
+We made minimal modifications to BEELINE in order to benchmark various model-X knockoffs for the purpose of causal gene regulatory network inference.
 
 The main changes we made were:
 
