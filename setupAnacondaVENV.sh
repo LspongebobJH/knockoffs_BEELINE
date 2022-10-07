@@ -10,3 +10,4 @@ conda activate BEELINE
 # TODO: Write the PRROC AUC function and make it BEELINE package without using rpy2
 
 R -e "install.packages('https://cran.r-project.org/src/contrib/PRROC_1.3.1.tar.gz', type = 'source')"
+R -e "install.packages(c('ggplot2', 'data.table', 'tidyr', 'gtools'), repos = 'https://cloud.r-project.org/')"

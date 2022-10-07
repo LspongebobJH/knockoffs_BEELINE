@@ -112,7 +112,7 @@ def FDR(evalObject, algorithmName, TFEdges = False):
             # node, else use the non-zero minimum value.
             def get_candidates(threshold):
                 newDF = predDF.loc[(predDF['q_value'] <= threshold)]
-                return set(newDF['Gene1'] + "|" + newDF['Gene2'])
+                return set([str(newDF.loc[i, 'Gene1']) + "|" + str(newDF.loc[i, 'Gene2']) for i in newDF.index])
             rankDict[dataset["name"]] = [get_candidates(0.1*x) for x in range(10)]
     Fdr = {}
 

@@ -36,13 +36,17 @@ BASEDIR=$(pwd)
 # docker build -q -t pni:base .
 # echo "Docker container for PNI is built and tagged as pni:base"
 
-cd $BASEDIR/Algorithms/PPCOR/
-docker build -q -t ppcor:base .
-echo "Docker container for PPCOR is built and tagged as ppcor:base"
+# cd $BASEDIR/Algorithms/PPCOR/
+# docker build -q -t ppcor:base .
+# echo "Docker container for PPCOR is built and tagged as ppcor:base"
 
 cd $BASEDIR/Algorithms/LOOK/
 docker build -t look:base .
 echo "Docker container for LOOK is built and tagged as look:base"
+
+cd $BASEDIR/Algorithms/GENENET/
+docker build -t genenet:base .
+echo "Docker container for GENENET is built and tagged as genenet:base"
 
 # cd $BASEDIR/Algorithms/SINGE/
 # docker build -q -t singe:base .

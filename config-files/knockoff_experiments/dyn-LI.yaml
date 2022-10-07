@@ -160,6 +160,18 @@ input_settings:
               data_mode: ["easy"]
               
 
+        - name: "GENENET_rnaonly"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              data_mode: ["rna_only"]
+              
+        - name: "GENENET_easy"
+          params: 
+              should_run: [True]
+              calibrate: [True]
+              data_mode: ["easy"] 
+              
         - name: "SCODE"
           params:
               should_run: [False]

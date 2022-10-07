@@ -69,6 +69,11 @@ input_settings:
           params: 
               should_run: [True]
               calibrate: [False]
+              
+        - name: "GENENET"
+          params: 
+              should_run: [True]
+              calibrate: [False]
                
         - name: "SCODE"
           params:
