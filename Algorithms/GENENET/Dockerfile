@@ -11,7 +11,6 @@ WORKDIR /
 RUN R -e "install.packages(c('knockoff', 'data.table'))"
 RUN R -e "install.packages(c('magrittr'))"
 RUN mkdir data/
-RUN apt-get update && apt-get install time
 RUN R -e "install.packages(c('FNN'))"
 RUN R -e "install.packages(c('optparse'))"
 RUN R -e "install.packages(c('ggplot2'))"
@@ -25,3 +24,4 @@ COPY rlookc_0.1.0.tar.gz /
 RUN R -e "install.packages('rlookc_0.1.0.tar.gz', type = 'source')"
 COPY runGeneNet.R /
 
+RUN apt-get update && apt-get install -y time

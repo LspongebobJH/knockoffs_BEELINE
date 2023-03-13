@@ -2,10 +2,15 @@ setwd("~/Desktop/jhu/research/projects/knockoffs/applications/Beeline")
 library(magrittr)
 library(ggplot2)
 ggplot2::theme_update(text = element_text(family = "ArialMT"))
+methods_include_figure_a = c(
+  #"GENENET", 
+  "LOOK")
 knockoff_type_color_mapping =
-  scale_color_manual(values = c("y=x" ="black",
+  scale_color_manual(limits = force, 
+                     values = c("y=x" = "black",
+                                "original data" = "black",
                                 "geneNet" = "forestgreen",
-                                "knockoffs (naive)" = "blue",
+                                "knockoffs (permuted)" = "blue",
                                 "knockoffs (gaussian)" ="red",
                                 "knockoffs (mixture)" = "orange"))
 grabResults = function(pattern,
@@ -67,19 +72,22 @@ ggsave("rna_vs_velocity.pdf", height = 4, width = 6)
 for(metric in c("FDR", "undirectedFDR")){
   plot_data = grabResults(pattern = metric) %>%
     data.table::rbindlist() %>%
-    tidyr::pivot_longer(cols = X0:X9, values_to = "empirical_fdr", names_to = "targeted_fdr") %>%
-    dplyr::mutate(targeted_fdr = gsub("^X", "", targeted_fdr) %>% as.numeric %>% divide_by(10)) %>%
+    tidyr::pivot_longer(cols = X0:X9, values_to = "observed_fdr", names_to = "expected_fdr") %>%
+    dplyr::mutate(expected_fdr = gsub("^X", "", expected_fdr) %>% as.numeric %>% divide_by(10)) %>%
     tidyr::separate(X, into = c(NA, "network", "cellcount", "replicate")) %>%
     tidyr::separate(method, into = c("method", "knockoff_type", "data_mode"), sep = "_") %>%
-    subset(method %in% c("GENENET", "LOOK"))  %>%
+    subset(method %in% methods_include_figure_a)  %>%
     dplyr::mutate(is_knockoff_based = method=="LOOK") %>%
+    dplyr::mutate(data_mode =  ifelse(data_mode=="easy", "RNA+protein", data_mode)) %>%
     dplyr::mutate(data_mode =  ifelse(!is_knockoff_based, knockoff_type, data_mode)) %>%
     dplyr::mutate(knockoff_type =  ifelse(!is_knockoff_based, "", knockoff_type)) %>%
     dplyr::mutate(method_summary =  paste0(method, " (", knockoff_type, ")") ) %>%
     dplyr::mutate(method_summary = gsub("GENENET ()", "geneNet", method_summary, fixed = T)) %>%
-    dplyr::mutate(method_summary = gsub("LOOK", "knockoffs", method_summary, fixed = T)) 
+    dplyr::mutate(method_summary = gsub("LOOK", "knockoffs", method_summary, fixed = T))  %>%
+    dplyr::mutate(knockoff_type = gsub("naive", "permuted", knockoff_type, fixed = T)) %>%
+    dplyr::mutate(method_summary = gsub("naive", "permuted", method_summary, fixed = T)) 
   ggplot(plot_data) +
-    geom_smooth(aes(x = targeted_fdr, y = empirical_fdr, colour = method_summary, group = method_summary), se = F) +
+    geom_smooth(aes(x = expected_fdr, y = observed_fdr, colour = method_summary, group = method_summary), se = F) +
     facet_grid(data_mode ~ network) +
     ylab(metric) +
     ggtitle("Calibration on BEELINE simple network simulations") +
@@ -91,47 +99,53 @@ for(metric in c("FDR", "undirectedFDR")){
   ggsave(paste0(metric, ".pdf"), height = 4, width = 8)
 }
 
-# BEELINE metrics
-metric = "aupr"
-aupr = grabResults(metric)
-plot_data = list()
-for(fname in names(aupr)){
-  aupr[[fname]] %<>%
-    tidyr::pivot_longer(cols = !X, values_to = "metric") %>%
-    tidyr::separate(name, into = c(NA, "network", "cellcount", "replicate")) %>%
-    dplyr::rename(method=X) %>%
-    dplyr::mutate(cellcount = factor(cellcount, levels = gtools::mixedsort(unique(cellcount)))) %>%
-    tidyr::separate(method, into = c("method", "knockoff_type", "data_mode"), sep = "_") %>%
-    subset(!is.na(knockoff_type))
-}
-aupr %<>% data.table::rbindlist()
-ggplot(aupr) +
-  geom_violin(aes(x = knockoff_type, y = metric, group = knockoff_type)) +
-  geom_point(aes(x = knockoff_type, y = metric, group = knockoff_type)) +
-  facet_grid(data_mode~network) +
-  ylab(metric) +
-  ggtitle(paste0(metric, " on BEELINE simple simulations"))
-ggsave(paste0(metric, ".pdf"), height = 4, width = 8)
-
-
-# Calibration checks based on simulated Y
-calibration_checks = grabResults(pattern = "calibration.Rda",
-                                 reader = readRDS)
-plot_data = list()
-for(fname in names(calibration_checks)){
-  plot_data[[fname]] = data.frame(
-    empirical_fdr = calibration_checks[[fname]]$calibration$fdr %>% colMeans,
-    targeted_fdr  = calibration_checks[[fname]]$calibration$targeted_fdrs,
-    network = basename(dirname(dirname(dirname(fname)))),
-    replicate = basename(dirname(dirname(fname))) %>% strsplit("-") %>% extract2(1) %>% extract2(4),
-    cellcount = basename(dirname(dirname(fname))) %>% strsplit("-") %>% extract2(1) %>% extract2(3)
+# Example knockoffs + original data tsne
+knockoffs_and_orig_data = Reduce(rbind, list(
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_gaussian_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_mixture_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/data.csv", row.names = 1)
+))
+embedding = tsne::tsne(knockoffs_and_orig_data, 2, max_iter = 800) %>% as.data.frame %>% set_colnames(c("tsne1", "tsne2"))
+metadata = data.frame(
+  type = rep(c("knockoffs (gaussian)", 
+                            "knockoffs (mixture)", 
+                            "knockoffs (permuted)", 
+                            "original data"), each=500),
+  "time" = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/PseudoTime.csv")[[2]] %>% rep(times=4)
+)  
+ggplot(cbind(embedding, metadata)) + 
+  geom_point(aes(x = tsne1, y = tsne2, color = type, shape = type)) + 
+  knockoff_type_color_mapping +
+  coord_fixed() + 
+  ggtitle("Input data and all knockoffs", "BFC network protein concentration")
+ggsave("tsne.pdf", width = 6, height= 6)
+# Example knockoffs + original data timeseries
+knockoff_types = c(
+  "knockoffs (gaussian)", 
+  "knockoffs (mixture)", 
+  "knockoffs (permuted)", 
+  "original data")
+knockoffs_and_orig_data = data.table::rbindlist( list(
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_gaussian_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_mixture_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/data.csv")
+)) %>% 
+  set_colnames(c("cell", colnames(.)[-1])) %>%
+  dplyr::mutate(
+    type=knockoff_types %>% rep(each=500)
   )
-}
-plot_data %<>% data.table::rbindlist()
-ggplot(plot_data) +
-  geom_point(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, shape = cellcount)) +
-  geom_smooth(aes(x = targeted_fdr, y = empirical_fdr, colour = cellcount, shape = cellcount)) +
-  facet_wrap(~network) +
-  ggtitle("Calibration on BEELINE simple network simulations") +
-  geom_abline(slope=1, intercept = 0)
-
+metadata = data.frame(
+  type=knockoff_types %>% rep(each=500),
+  time = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[2]] %>%
+    rep(times=4),
+  cell = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[1]] %>% 
+    rep(times=4)
+) 
+ggplot(merge(knockoffs_and_orig_data, metadata, by = c("cell", "type"))) + 
+  geom_point(aes(x = time, y = g1, color = type, shape = type)) +
+  geom_smooth(aes(x = time, y = g1, color = type, group = type), se = F) + 
+  knockoff_type_color_mapping +
+  ggtitle("Input data and all knockoffs", "CY network protein concentration")
+ggsave("time.pdf", width = 8, height= 6)

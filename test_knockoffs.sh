@@ -4,12 +4,12 @@
 conda activate BEELINE
 ./initialize.sh
 
-for toy in BFC #BF CY LI LL TF
+for toy in BFC BF CY LI LL TF
 do
     python BLRunner.py --config config-files/knockoff_experiments/dyn-${toy}.yaml
-    python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --auc
-    python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --ufdr
-    python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --fdr
+    # python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --auc
+    # python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --ufdr
+    # python BLEvaluator.py --config config-files/knockoff_experiments/dyn-${toy}.yaml --fdr
 done
 
 Rscript plotKnockoffEvaluation.R

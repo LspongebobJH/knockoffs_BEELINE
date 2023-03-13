@@ -174,7 +174,8 @@ generateKnockoffs = function(X, knockoff_type = arguments$knockoff_type){
   if(knockoff_type == "identical"){
     knockoffs = X
   } else if(knockoff_type == "naive"){
-    knockoffs = X %>% apply(2, sample)
+    r = rownames(X)
+    knockoffs = X %>% apply(2, sample) %>% set_rownames(r)
   } else if(knockoff_type == "gaussian"){
     knockoffs = X %>% knockoff::create.second_order()
   } else if(knockoff_type == "mixture"){
@@ -200,6 +201,8 @@ applyKnockoffFilter = function(data_mode = arguments$data_mode){
     stopifnot("Protein levels must be provided with prefix 'p_'.          \n"=nrow(inputProtein)>0)
     stopifnot("Velocity levels must be provided with prefix 'velocity_x_'.\n"=nrow(inputRNAvelocity)>0)
     knockoffs = generateKnockoffs(t(inputProtein))
+    write.csv(knockoffs,       paste0(dirname(arguments$outFile), "/knockoffs.csv"))
+    write.csv(t(inputProtein), paste0(dirname(arguments$outFile), "/data.csv"))
     runCalibrationCheck(X = t(inputProtein), X_k = knockoffs)
     inputRNAproduction = getProductionRate(inputRNAvelocity = inputRNAvelocity, inputRNA = inputRNA)
     knockoffResults = lapply(
@@ -207,6 +210,10 @@ applyKnockoffFilter = function(data_mode = arguments$data_mode){
       function(i) knockoff::stat.glmnet_lambdasmax( t(inputProtein), knockoffs, y = inputRNAproduction[i,] )[-i]
     )
   } else if (data_mode == "rna_only") {
+    # Save regular knockoffs for later visualization 
+    write.csv(generateKnockoffs(t(inputRNA)), paste0(dirname(arguments$outFile), "/knockoffs.csv"))
+    write.csv(t(inputRNA),                    paste0(dirname(arguments$outFile), "/data.csv"))
+    # Need leave-one-out knockoffs for actual network inference
     knockoffs = lapply(1:ncol(t(inputRNA)), function(i) generateKnockoffs(t(inputRNA[-i,])))
     runCalibrationCheck(X = t(inputRNA), X_k = generateKnockoffs(t(inputRNA)))
     knockoffResults = lapply(
