@@ -5,7 +5,6 @@ We made minimal modifications to BEELINE in order to benchmark various model-X k
 Our changes:
 
 - evaluate multiple parameter settings of the same model (issue [here](https://github.com/Murali-group/Beeline/issues/59))
-- add the GeneNet network inference method
 - add a knockoff-based network inference method
 - add datasets with protein concentration and RNA production rate revealed (small modification of BoolODE)
 - benchmark FDR and undirected FDR in addition to AUPR et cetera
