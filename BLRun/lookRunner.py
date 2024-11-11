@@ -11,7 +11,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("LOOK").exists():
         print("Input folder for LOOK does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("LOOK").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("LOOK").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("LOOK/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -26,7 +26,7 @@ def run(RunnerObj):
     Function to run LOOK algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/LOOK/ExpressionData.csv"
+                    "/ExpressionData.csv"
     # make output dirs if they do not exist:
 
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"

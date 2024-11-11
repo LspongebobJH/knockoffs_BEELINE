@@ -12,7 +12,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("GENENET").exists():
         print("Input folder for GENENET does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("GENENET").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("GENENET").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("GENENET/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -28,7 +28,7 @@ def run(RunnerObj):
     Function to run GENENET algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/GENENET/ExpressionData.csv"
+                    "/ExpressionData.csv"
     # make output dirs if they do not exist:
 
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"

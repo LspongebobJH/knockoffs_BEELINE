@@ -15,7 +15,7 @@ knockoff_type_color_mapping =
                                 "knockoffs (mixture)" = "orange"))
 grabResults = function(pattern,
                        reader = read.csv,
-                       base_dir = "outputs/Synthetic_with_protein_and_velocity",
+                       base_dir = "outputs/Synthetic",
                        ...){
   x = list.files(base_dir,
                  pattern = paste0("(-|_)", pattern),
@@ -30,7 +30,7 @@ plot_protein_vs_rna = function(other_quantity = "protein"){
                   protein="^p_",
                   velocity="^velocity_x_")
   expressionData =
-    "inputs/Synthetic_with_protein_and_velocity" %>%
+    "inputs/Synthetic" %>%
     list.files(full.names = T) %>%
     list.files(pattern = "dyn-", full.names = T) %>%
     list.files(pattern = "ExpressionData", full.names = T) 
@@ -101,10 +101,10 @@ for(metric in c("FDR", "undirectedFDR")){
 
 # Example knockoffs + original data tsne
 knockoffs_and_orig_data = Reduce(rbind, list(
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_gaussian_easy/knockoffs.csv", row.names = 1),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_mixture_easy/knockoffs.csv", row.names = 1),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/knockoffs.csv", row.names = 1),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/data.csv", row.names = 1)
+  read.csv("outputs/Synthetic/dyn-BFC/dyn-BFC-500-1/LOOK_gaussian_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic/dyn-BFC/dyn-BFC-500-1/LOOK_mixture_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/knockoffs.csv", row.names = 1),
+  read.csv("outputs/Synthetic/dyn-BFC/dyn-BFC-500-1/LOOK_naive_easy/data.csv", row.names = 1)
 ))
 embedding = tsne::tsne(knockoffs_and_orig_data, 2, max_iter = 800) %>% as.data.frame %>% set_colnames(c("tsne1", "tsne2"))
 metadata = data.frame(
@@ -112,7 +112,7 @@ metadata = data.frame(
                             "knockoffs (mixture)", 
                             "knockoffs (permuted)", 
                             "original data"), each=500),
-  "time" = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-BFC/dyn-BFC-500-1/PseudoTime.csv")[[2]] %>% rep(times=4)
+  "time" = read.csv("inputs/Synthetic/dyn-BFC/dyn-BFC-500-1/PseudoTime.csv")[[2]] %>% rep(times=4)
 )  
 ggplot(cbind(embedding, metadata)) + 
   geom_point(aes(x = tsne1, y = tsne2, color = type, shape = type)) + 
@@ -127,10 +127,10 @@ knockoff_types = c(
   "knockoffs (permuted)", 
   "original data")
 knockoffs_and_orig_data = data.table::rbindlist( list(
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_gaussian_easy/knockoffs.csv"),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_mixture_easy/knockoffs.csv"),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/knockoffs.csv"),
-  read.csv("outputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/data.csv")
+  read.csv("outputs/Synthetic/dyn-CY/dyn-CY-500-1/LOOK_gaussian_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic/dyn-CY/dyn-CY-500-1/LOOK_mixture_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/knockoffs.csv"),
+  read.csv("outputs/Synthetic/dyn-CY/dyn-CY-500-1/LOOK_naive_easy/data.csv")
 )) %>% 
   set_colnames(c("cell", colnames(.)[-1])) %>%
   dplyr::mutate(
@@ -138,9 +138,9 @@ knockoffs_and_orig_data = data.table::rbindlist( list(
   )
 metadata = data.frame(
   type=knockoff_types %>% rep(each=500),
-  time = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[2]] %>%
+  time = read.csv("inputs/Synthetic/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[2]] %>%
     rep(times=4),
-  cell = read.csv("inputs/Synthetic_with_protein_and_velocity/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[1]] %>% 
+  cell = read.csv("inputs/Synthetic/dyn-CY/dyn-CY-500-1/PseudoTime.csv")[[1]] %>% 
     rep(times=4)
 ) 
 ggplot(merge(knockoffs_and_orig_data, metadata, by = c("cell", "type"))) + 

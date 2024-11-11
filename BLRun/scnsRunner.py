@@ -14,7 +14,7 @@ def generateInputs(RunnerObj):
     
     if not RunnerObj.inputDir.joinpath("SCNS").exists():
         print("Input folder for SCNS does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("SCNS").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("SCNS").mkdir(exist_ok = False, parents = True)
         
     # input file
     ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),

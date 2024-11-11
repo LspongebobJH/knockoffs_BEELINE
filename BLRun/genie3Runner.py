@@ -13,7 +13,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("GENIE3").exists():
         print("Input folder for GENIE3 does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("GENIE3").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("GENIE3").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("GENIE3/ExpressionData.csv").exists():
         # input data
@@ -31,7 +31,7 @@ def run(RunnerObj):
     :param RunnerObj: An instance of the :class:`BLRun`
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/GENIE3/ExpressionData.csv"
+                    "/ExpressionData.csv"
     # make output dirs if they do not exist:
 
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"

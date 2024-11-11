@@ -12,7 +12,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("SINGE").exists():
         print("Input folder for SINGE does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("SINGE").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("SINGE").mkdir(exist_ok = False, parents = True)
         
     ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)

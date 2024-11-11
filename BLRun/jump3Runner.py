@@ -12,7 +12,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("JUMP3").exists():
         print("Input folder for JUMP3 does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("JUMP3").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("JUMP3").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("JUMP3/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -43,7 +43,7 @@ def run(RunnerObj):
     Function to run GRN-VBEM algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/JUMP3/ExpressionData.csv"
+                    "/ExpressionData.csv"
     
     # make output dirs if they do not exist:
 

@@ -25,7 +25,7 @@ arguments <- parse_args(parser, positional_arguments = FALSE)
 
 # # For manual testing of the script
 # arguments = list(
-#   expressionFile = "~/Desktop/jhu/research/projects/knockoffs/applications/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-1/GENENET/ExpressionData.csv",
+#   expressionFile = "~/Desktop/jhu/research/projects/knockoffs/applications/Beeline/inputs/Synthetic/dyn-LL/dyn-LL-500-1/GENENET/ExpressionData.csv",
 #   outFile = "~/Desktop/jhu/research/projects/knockoffs/applications/Beeline/temp/outputs.txt",
 #   calibrate = T,
 #   data_mode = "rna_only"

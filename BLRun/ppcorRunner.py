@@ -11,7 +11,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("PPCOR").exists():
         print("Input folder for PPCOR does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("PPCOR").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("PPCOR").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("PPCOR/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -28,7 +28,7 @@ def run(RunnerObj):
     Function to run PPCOR algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/PPCOR/ExpressionData.csv"
+                    "/ExpressionData.csv"
     
     # make output dirs if they do not exist:
 

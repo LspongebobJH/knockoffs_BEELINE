@@ -11,7 +11,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("GRNBOOST2").exists():
         print("Input folder for GRNBOOST2 does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("GRNBOOST2").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("GRNBOOST2").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("GRNBOOST2/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -26,7 +26,7 @@ def run(RunnerObj):
     Function to run GRNBOOST2 algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/GRNBOOST2/ExpressionData.csv"
+                    "/ExpressionData.csv"
     # make output dirs if they do not exist:
 
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+f"/{RunnerObj.name}/"

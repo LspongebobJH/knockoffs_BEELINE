@@ -10,7 +10,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("LEAP").exists():
         print("Input folder for LEAP does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("LEAP").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("LEAP").mkdir(exist_ok = False, parents = True)
         
     ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)

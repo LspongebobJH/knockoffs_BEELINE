@@ -31,7 +31,7 @@ nonparametricMarginalScreen = function(X, knockoffs, y){
 
 # For manual testing of the script
 # arguments = list(
-#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic_with_protein_and_velocity/dyn-LL/dyn-LL-500-1/LOOK/ExpressionData.csv",
+#   expressionFile = "~/Desktop/jhu/research/projects/Beeline/inputs/Synthetic/dyn-LL/dyn-LL-500-1/LOOK/ExpressionData.csv",
 #   outFile = "~/Desktop/jhu/research/projects/Beeline/temp/outputs.txt",
 #   calibrate = T,
 #   data_mode = "rna_only",

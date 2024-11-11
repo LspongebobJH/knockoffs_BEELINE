@@ -11,7 +11,7 @@ def generateInputs(RunnerObj):
     '''
     if not RunnerObj.inputDir.joinpath("PIDC").exists():
         print("Input folder for PIDC does not exist, creating input folder...")
-        RunnerObj.inputDir.joinpath("PIDC").mkdir(exist_ok = False)
+        RunnerObj.inputDir.joinpath("PIDC").mkdir(exist_ok = False, parents = True)
         
     if not RunnerObj.inputDir.joinpath("PIDC/ExpressionData.csv").exists():
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
@@ -24,7 +24,7 @@ def run(RunnerObj):
     Function to run PIDC algorithm
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
-                    "/PIDC/ExpressionData.csv"
+                    "/ExpressionData.csv"
     
     # make output dirs if they do not exist:
 
